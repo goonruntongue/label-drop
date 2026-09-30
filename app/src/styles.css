@@ -52,6 +52,10 @@ button, input, select { font: inherit; color: inherit; }
 .num { font-family: var(--font-mono); font-variant-numeric: tabular-nums; }
 .sr-only { position: absolute; width: 1px; height: 1px; overflow: hidden; clip-path: inset(50%); white-space: nowrap; }
 
+/* Home-screen app (standalone): keep content clear of the iPhone home indicator and rounded corners. */
+.pane { padding-bottom: max(16px, env(safe-area-inset-bottom)); }
+.hud { padding-left: max(16px, env(safe-area-inset-left)); padding-right: max(16px, env(safe-area-inset-right)); }
+
 /* minmax(0, 1fr): a wide HUD must never push the page wider than the viewport (it scrolls instead). */
 .app { display: grid; grid-template-rows: var(--hud-h) 1fr; grid-template-columns: minmax(0, 1fr); height: 100dvh; }
 .main { display: grid; grid-template-columns: minmax(0, 1fr) var(--pane-w); min-height: 0; }

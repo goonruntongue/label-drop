@@ -19,6 +19,8 @@ function lanUrls(): string[] {
 
 export default defineConfig(({ command }) => ({
   plugins: [react()],
+  // Relative asset paths so the build works under any sub-path (GitHub Pages serves it at /label-drop/app/).
+  base: './',
   // host: true listens on all interfaces (0.0.0.0), not just localhost, for same-LAN device testing.
   server: { host: true, port: PORT, strictPort: true },
   preview: { host: true, port: 4173 },
