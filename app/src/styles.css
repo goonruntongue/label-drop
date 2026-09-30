@@ -442,6 +442,8 @@ button, input, select { font: inherit; color: inherit; }
 .device-lead { margin: 0; line-height: 1.6; }
 .device-qr { border-radius: 8px; background: #fff; }
 .device-url { margin: 0; font-size: 13px; font-weight: 700; color: var(--text-1); user-select: all; word-break: break-all; }
+.device-actions { display: flex; gap: 6px; }
+.device-actions .btn { white-space: nowrap; font-size: 12px; }
 .device-pick { align-self: stretch; display: flex; flex-direction: column; gap: 4px; }
 .device-pick select { background: var(--bg-0); border: 1px solid var(--line-soft); border-radius: 8px; padding: 4px; }
 .device-note { margin: 0; font-size: 11px; line-height: 1.6; color: var(--text-3); }
