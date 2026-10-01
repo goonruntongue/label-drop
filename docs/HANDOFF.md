@@ -7,8 +7,8 @@
 
 - **Label Drop**（practice IA シリーズ）：IA のグルーピングとラベリングを練習する 3D ゲーム。
 - **AI を使わない範囲は、ほぼ完成**（仕様書の P0〜P2 相当）。AI（Cloudflare Workers AI）による出題・評価は未着手で、仕様だけ `docs/SPEC.md` にある（P3 以降）。
-- 最新のアプリの変更: label-drop `c7f7830`（`main`）。開発版の公開: https://goonruntongue.github.io/label-drop/app/
-- ポータルにも反映済み: knowledge-sorrounding-AI `main` の `616d804`（label-drop `c7f7830` 時点）。GitHub Pages と Cloudflare Pages の両方。
+- 最新のアプリの変更: label-drop `0eea219`（`main`）。開発版の公開: https://goonruntongue.github.io/label-drop/app/
+- ポータルにも反映済み: knowledge-sorrounding-AI `main` の `863dade`（label-drop `0eea219` 時点）。GitHub Pages と Cloudflare Pages の両方。
   公開: https://goonruntongue.github.io/knowledge-sorrounding-AI/about-ia/app/dist/
 - **ポータルは Cloudflare Pages でも公開**（2026-10-02〜、プロジェクト `knowledge-surrounding-ai`）: https://knowledge-surrounding-ai.pages.dev/ 。「ポータルに反映して」では GitHub の `main` と Cloudflare の両方を同じコミットにそろえる（`docs/PORTAL_DEPLOY.md` 3-5、ポータル側は `PORTAL_PUBLISH_RULES.md`）。
 
