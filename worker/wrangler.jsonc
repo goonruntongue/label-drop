@@ -16,6 +16,11 @@
       "migrations_dir": "migrations"
     }
   ],
+  // Workers AI. Free plan: past 10,000 Neurons a day calls fail (3036); nothing is billed.
+  // Local development: put AI_MOCK=1 in .dev.vars so `wrangler dev` never spends the allocation.
+  "ai": { "binding": "AI" },
+  // Pre-generation every 30 minutes (SPEC 8.4); only does work before the 09:00 JST reset or when stock is low.
+  "triggers": { "crons": ["*/30 * * * *"] },
   "access": {
     // wrangler dev: pretend Cloudflare Access let this user in (only used when AUTH_MODE=access)
     "dev": { "aud": "label-drop-dev", "identity": { "email": "dev@example.com", "name": "Dev" } }
@@ -30,6 +35,11 @@
     "QUOTA_GEN_PER_DAY": "3",
     // Rough Neurons per call, for "about N more" in the meter (calibrated once AI calls exist, P4/P5).
     "EST_GEN_NEURONS": "220",
-    "EST_EVAL_NEURONS": "90"
+    "EST_EVAL_NEURONS": "90",
+    "GEN_MODEL": "@cf/google/gemma-4-26b-a4b-it",
+    "EMBED_MODEL": "@cf/baai/bge-m3",
+    "CALIBRATION": "1.15",
+    "QA_MIN_COHESION": "0.8",
+    "AI_MOCK": "0"
   }
 }

@@ -10,7 +10,7 @@ let proxy: PlatformProxy<Env>;
 let env: Env;
 
 beforeAll(async () => {
-  proxy = await getPlatformProxy<Env>({ persist: { path: '.wrangler/test-state/v3' } });
+  proxy = await getPlatformProxy<Env>({ persist: { path: '.wrangler/test-state/v3' }, remoteBindings: false });
   env = proxy.env;
 });
 afterAll(async () => {

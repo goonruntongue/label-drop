@@ -45,3 +45,44 @@ export async function usedToday(env: Env, userId: string, kind: 'gen' | 'eval', 
     .first<{ n: number }>();
   return row?.n ?? 0;
 }
+
+// ── Spending (SPEC 8.3): reserve before a call, settle with the real cost after, stop on 3036. ──
+
+/** Reserve `amount` Neurons for today. False when it would go past the cap (or the day is exhausted). */
+export async function reserve(env: Env, amount: number, now = new Date()): Promise<boolean> {
+  const day = utcDay(now);
+  await env.DB.prepare('INSERT OR IGNORE INTO ai_budget (day, cap, used) VALUES (?1, ?2, 0)').bind(day, Number(env.DAILY_CAP) || 9000).run();
+  const row = await env.DB.prepare('UPDATE ai_budget SET used = used + ?1 WHERE day = ?2 AND exhausted = 0 AND used + ?1 <= cap RETURNING used')
+    .bind(amount, day)
+    .first();
+  return !!row;
+}
+
+/** Replace a reservation with what the call really cost. */
+export async function settle(env: Env, reserved: number, actual: number, now = new Date()): Promise<void> {
+  await env.DB.prepare('UPDATE ai_budget SET used = MAX(0, used - ?1 + ?2) WHERE day = ?3').bind(reserved, actual, utcDay(now)).run();
+}
+
+/** Workers AI said the free allocation is gone: nothing more today. */
+export async function markExhausted(env: Env, now = new Date()): Promise<void> {
+  await env.DB.prepare('UPDATE ai_budget SET exhausted = 1, used = cap WHERE day = ?1').bind(utcDay(now)).run();
+}
+
+export interface CallRecord {
+  kind: 'gen' | 'eval' | 'embed';
+  model: string;
+  tokensIn?: number;
+  tokensOut?: number;
+  neurons?: number;
+  ok: boolean;
+  error?: string;
+  userId: string | null;
+}
+
+export async function recordCall(env: Env, c: CallRecord, now = new Date()): Promise<void> {
+  await env.DB.prepare(
+    'INSERT INTO ai_calls (day, kind, model, tokens_in, tokens_out, neurons, ok, error, user_id, created_at) VALUES (?1, ?2, ?3, ?4, ?5, ?6, ?7, ?8, ?9, ?10)',
+  )
+    .bind(utcDay(now), c.kind, c.model, c.tokensIn ?? null, c.tokensOut ?? null, c.neurons ?? null, c.ok ? 1 : 0, c.error ?? null, c.userId, now.toISOString())
+    .run();
+}

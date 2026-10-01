@@ -1,5 +1,6 @@
 export interface Env {
   DB: D1Database;
+  AI: Ai;
   /** "none": anonymous players (hashed IP, rotates daily). "access": Cloudflare Access sign-in (SPEC 8.5). */
   AUTH_MODE: 'none' | 'access';
   /** Comma-separated origins allowed to call the API (the pages that serve the game). */
@@ -13,13 +14,21 @@ export interface Env {
   QUOTA_GEN_PER_DAY: string;
   EST_GEN_NEURONS: string;
   EST_EVAL_NEURONS: string;
+  GEN_MODEL: string;
+  EMBED_MODEL: string;
+  /** Multiplies the computed Neurons, corrected against the dashboard once real calls run (SPEC 8.2). */
+  CALIBRATION: string;
+  /** "1": answer from a fixture instead of calling Workers AI (local development). */
+  AI_MOCK?: string;
+  /** Share of keywords that must sit closest to their own group in the embedding check (SPEC 7.2 ④). */
+  QA_MIN_COHESION?: string;
   /** Secret salt for anonymous ids (`wrangler secret put ANON_SALT`); a fixed fallback is used when unset. */
   ANON_SALT?: string;
 }
 
 export class HttpError extends Error {
   constructor(
-    readonly status: 400 | 401 | 403 | 404 | 409 | 429 | 500,
+    readonly status: 400 | 401 | 403 | 404 | 409 | 429 | 500 | 503,
     message: string,
   ) {
     super(message);
