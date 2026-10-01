@@ -132,20 +132,27 @@ export function BriefCard() {
     );
   }
 
+  // Two labelled buttons, one action each: the text itself does nothing when tapped
+  // (it used to: the top half folded the card, the bottom half opened the brief — easy to mix up).
   return (
     <div className="brief-card">
-      <button type="button" className="brief-card-head" onClick={toggle} aria-expanded={true} title="お題をたたむ">
+      <div className="brief-card-head">
         <span className="kicker">{tag}</span>
-        <span className="brief-pill-arrow" aria-hidden="true">
-          ▼
-        </span>
-      </button>
-      <button type="button" className="brief-card-body" onClick={() => useGame.getState().openBriefing()} title="お題をもう一度くわしく見る">
+        <div className="brief-card-actions">
+          <button type="button" className="brief-act" onClick={() => useGame.getState().openBriefing()} title="お題をもう一度くわしく見る">
+            くわしく
+          </button>
+          <button type="button" className="brief-act is-icon" onClick={toggle} aria-expanded={true} aria-label="お題をたたむ" title="お題をたたむ">
+            <span aria-hidden="true">－</span>
+          </button>
+        </div>
+      </div>
+      <div className="brief-card-body">
         <b>{problem.title}</b>
         <span>
           {problem.brief.user}が、{problem.brief.scene}
         </span>
-      </button>
+      </div>
     </div>
   );
 }
