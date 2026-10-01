@@ -215,7 +215,8 @@ function boardFor(mode: Mode, level: number, problemIndex: number, blockCount: n
  * Lv1–3 everyday things, Lv4–6 + everyday services/apps, Lv7+ everything including professional web IA.
  */
 function topicFor(mode: Mode, level: number, current: number): number {
-  if (mode !== 'level') return current;
+  // Free mode keeps the chosen topic; on startup (no topic yet) it starts from a random one.
+  if (mode !== 'level') return current >= 0 && current < PROBLEMS.length ? current : Math.floor(Math.random() * PROBLEMS.length);
   const pool = level <= 3 ? topicsOf('everyday') : level <= 6 ? topicsOf('everyday', 'service') : PROBLEMS.map((_, i) => i);
   const others = pool.filter((i) => i !== current);
   const choices = others.length ? others : pool;

@@ -988,7 +988,7 @@ button, input, select { font: inherit; color: inherit; }
 }
 @media (max-width: 640px) {
   .buddy { top: 52px; right: 6px; }
-  .buddy-figure { width: 108px; height: 140px; }
+  .buddy-figure { width: 96px; height: 126px; }
   .buddy-say { max-width: 150px; margin-top: 10px; font-size: 11px; }
 }
 
@@ -1005,5 +1005,6 @@ button, input, select { font: inherit; color: inherit; }
 
 /* While solving: small, faint, out of the way; gone during a drag. */
 .buddy-figure { transform-origin: 100% 0; transition: transform 350ms var(--ease-out, ease-out), opacity 350ms ease; }
-.buddy.is-resting .buddy-figure { transform: scale(0.5); opacity: 0.4; }
-body.is-dragging .buddy { opacity: 0; }
+/* It has its own column (the block field leaves room for it), so it stays fully visible while solving;
+   it only fades while a block is being dragged, in case the throw passes behind it. */
+body.is-dragging .buddy { opacity: 0.35; }

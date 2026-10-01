@@ -2,8 +2,8 @@
 // for moments outside the answer check (everything placed, a new form). During the result it
 // stays behind the result card; the comment there speaks for it.
 // It stays mounted (hidden with CSS) so the 3D model isn't rebuilt every round.
-// While the player is solving it rests small and faint in the corner (and vanishes during a
-// drag) so it never gets in the way; it only wakes up to full size to react.
+// The block field keeps a column free for it (see buddyReservePx), so it stays visible without
+// covering blocks. "awake" only gates the speech bubble.
 import { lazy, Suspense, useCallback, useEffect, useRef, useState } from 'react';
 import { currentCharacterIndex } from '../game/characters';
 import { useGame } from '../state/store';

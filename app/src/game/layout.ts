@@ -26,6 +26,12 @@ export interface Metrics {
   fieldBottom: number;
 }
 
+/** Screen width (CSS px) kept free at the right of the block field for the stage character.
+ *  Must match `.buddy` / `.buddy-figure` in styles.css (right offset + figure width). */
+export function buddyReservePx(width: number): number {
+  return width <= 640 ? 102 : 164;
+}
+
 /** World-space extents of the play area for a canvas of the given CSS size. */
 export function metrics(width: number, height: number): Metrics {
   const aspect = width / Math.max(height, 1);
@@ -47,7 +53,8 @@ export function metrics(width: number, height: number): Metrics {
     trayY,
     trayGap: 0.35,
     fieldLeft: -vw0 / 2 + 0.6,
-    fieldRight: vw0 / 2 - 0.6,
+    // Blocks never rest under the character standing at the top right.
+    fieldRight: vw0 / 2 - Math.max(0.6, (buddyReservePx(width) * vw0) / Math.max(width, 1)),
     fieldTop: vh0 / 2 - 0.95, // leaves room for the hint / status banners
     fieldBottom: trayTopFraction * (vh0 / 2) + 0.4,
   };
