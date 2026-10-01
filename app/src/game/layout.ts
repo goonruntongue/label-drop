@@ -26,10 +26,30 @@ export interface Metrics {
   fieldBottom: number;
 }
 
-/** Screen width (CSS px) kept free at the right of the block field for the stage character.
- *  Must match `.buddy` / `.buddy-figure` in styles.css (right offset + figure width). */
-export function buddyReservePx(width: number): number {
-  return width <= 640 ? 102 : 164;
+/** The stage character's corner in CSS px (top-right of the canvas): its column width and how far
+ *  down it reaches. Must match `.buddy` (top, right) + `.buddy-figure` (size) in styles.css. */
+export function buddyCornerPx(width: number): { w: number; h: number } {
+  return width <= 640 ? { w: 102, h: 52 + 126 } : { w: 164, h: 56 + 196 };
+}
+
+/** A part of the screen blocks must not rest under, in world units on the z = 0 plane. */
+export interface Keepout {
+  left: number;
+  right: number;
+  top: number;
+  bottom: number;
+}
+
+/** A CSS-px rectangle on the canvas (0,0 = its top-left) as a padded world-space keep-out. */
+export function keepoutFromPx(m: Metrics, width: number, height: number, r: { left: number; top: number; right: number; bottom: number }, pad = 0.12): Keepout {
+  const sx = m.vw0 / Math.max(width, 1);
+  const sy = m.vh0 / Math.max(height, 1);
+  return {
+    left: (r.left - width / 2) * sx - pad,
+    right: (r.right - width / 2) * sx + pad,
+    top: (height / 2 - r.top) * sy + pad,
+    bottom: (height / 2 - r.bottom) * sy - pad,
+  };
 }
 
 /** World-space extents of the play area for a canvas of the given CSS size. */
@@ -53,8 +73,8 @@ export function metrics(width: number, height: number): Metrics {
     trayY,
     trayGap: 0.35,
     fieldLeft: -vw0 / 2 + 0.6,
-    // Blocks never rest under the character standing at the top right.
-    fieldRight: vw0 / 2 - Math.max(0.6, (buddyReservePx(width) * vw0) / Math.max(width, 1)),
+    // Full width: the character's corner and the brief are keep-outs only for the rows they reach.
+    fieldRight: vw0 / 2 - 0.6,
     fieldTop: vh0 / 2 - 0.95, // leaves room for the hint / status banners
     fieldBottom: trayTopFraction * (vh0 / 2) + 0.4,
   };
@@ -90,95 +110,113 @@ interface Entry {
   seed: number;
 }
 
-function packGreedy(list: Entry[], areaW: number, gapX: number, scale: number): Entry[][] {
-  const rows: Entry[][] = [];
-  let row: Entry[] = [];
-  let w = 0;
-  for (const e of list) {
-    const ew = e.width * scale;
-    const next = row.length ? w + gapX + ew : ew;
-    if (row.length && next > areaW) {
-      rows.push(row);
-      row = [e];
-      w = ew;
-    } else {
-      row.push(e);
-      w = next;
-    }
-  }
-  if (row.length) rows.push(row);
-  return rows;
-}
-
-// Same row count as greedy packing, but with row widths balanced so the last row is not a stub.
-function packBalanced(list: Entry[], areaW: number, gapX: number, scale: number): Entry[][] {
-  const count = packGreedy(list, areaW, gapX, scale).length;
-  if (count <= 1) return [list];
-  const total = list.reduce((sum, e) => sum + e.width * scale, 0) + gapX * (list.length - count);
-  const target = total / count;
-  const rows: Entry[][] = [];
-  let row: Entry[] = [];
-  let w = 0;
-  for (const e of list) {
-    const ew = e.width * scale;
-    const next = row.length ? w + gapX + ew : ew;
-    const full = next > areaW || (next - ew / 2 > target && rows.length < count - 1);
-    if (row.length && full) {
-      rows.push(row);
-      row = [e];
-      w = ew;
-    } else {
-      row.push(e);
-      w = next;
-    }
-  }
-  if (row.length) rows.push(row);
-  return rows;
+interface Band {
+  y: number;
+  left: number;
+  right: number;
 }
 
 /**
- * Non-overlapping, loosely jittered home positions for the floating blocks.
- * `boost` (text size 大) raises the starting size; the blocks still shrink until they fit, so a
- * crowded board (e.g. many blocks on a phone) ends up about the same size, never overlapping.
+ * `n` evenly spread rows for blocks of the given height, each narrowed by the keep-outs it overlaps:
+ * one on the left half pushes the row's start right, one on the right half pulls its end left.
  */
-export function layoutField(list: Entry[], m: Metrics, boost = 1): { homes: Map<string, THREE.Vector3>; scale: number } {
-  const homes = new Map<string, THREE.Vector3>();
-  if (!list.length) return { homes, scale: 1 };
-  const areaW = m.fieldRight - m.fieldLeft;
+function bandsFor(m: Metrics, n: number, rowH: number, keepouts: Keepout[]): { bands: Band[]; gapY: number } {
   const areaH = Math.max(1, m.fieldTop - m.fieldBottom);
-  const gapX = 0.32;
-  const minGapY = 0.28;
-
-  // Start above 1 so a sparse board (10-15 blocks) gets bigger, easier-to-read blocks.
-  let scale = 1.25 * boost;
-  let rows: Entry[][] = [];
-  for (;;) {
-    rows = packBalanced(list, areaW, gapX, scale);
-    const h = rows.length * BLOCK_H * scale + (rows.length - 1) * minGapY;
-    if (h <= areaH || scale <= 0.55) break;
-    scale -= 0.05;
-  }
-
-  const rowH = BLOCK_H * scale;
-  const n = rows.length;
   const gapY = n > 1 ? THREE.MathUtils.clamp((areaH - n * rowH) / (n - 1), 0.08, 1.3) : 0;
   const totalH = n * rowH + (n - 1) * gapY;
   const midY = (m.fieldTop + m.fieldBottom) / 2;
+  const bands: Band[] = [];
+  for (let r = 0; r < n; r++) {
+    const y = midY + totalH / 2 - rowH / 2 - r * (rowH + gapY);
+    const top = y + rowH / 2 + 0.1; // + vertical jitter
+    const bottom = y - rowH / 2 - 0.1;
+    let left = m.fieldLeft;
+    let right = m.fieldRight;
+    for (const k of keepouts) {
+      if (top <= k.bottom || bottom >= k.top) continue;
+      if ((k.left + k.right) / 2 < 0) left = Math.max(left, k.right);
+      else right = Math.min(right, k.left);
+    }
+    bands.push({ y, left, right });
+  }
+  return { bands, gapY };
+}
+
+/** Fill the rows top to bottom; `balanced` caps each at its share of the total so the last row isn't a stub. */
+function fillBands(list: Entry[], bands: Band[], gapX: number, scale: number, balanced: boolean): Entry[][] | null {
+  const rows: Entry[][] = bands.map(() => []);
+  const room = bands.map((b) => Math.max(0, b.right - b.left));
+  const totalRoom = room.reduce((a, b) => a + b, 0);
+  const totalW = list.reduce((sum, e) => sum + e.width * scale + gapX, 0);
+  let i = 0;
+  for (let r = 0; r < bands.length && i < list.length; r++) {
+    const share = balanced && totalRoom > 0 ? (totalW * room[r]) / totalRoom : Infinity;
+    let w = 0;
+    while (i < list.length) {
+      const ew = list[i].width * scale;
+      const next = rows[r].length ? w + gapX + ew : ew;
+      if (next > room[r] || (rows[r].length && next - ew / 2 > share)) break;
+      rows[r].push(list[i++]);
+      w = next;
+    }
+  }
+  return i === list.length ? rows : null;
+}
+
+/**
+ * Non-overlapping, loosely jittered home positions for the floating blocks. Rows run the full width
+ * of the field except where a keep-out (the brief card, the stage character) reaches into them, so
+ * the space under the character is used too.
+ * `boost` (text size 大) raises the starting size; the blocks still shrink until they fit, so a
+ * crowded board (e.g. many blocks on a phone) ends up about the same size, never overlapping.
+ */
+export function layoutField(list: Entry[], m: Metrics, boost = 1, keepouts: Keepout[] = []): { homes: Map<string, THREE.Vector3>; scale: number } {
+  const homes = new Map<string, THREE.Vector3>();
+  if (!list.length) return { homes, scale: 1 };
+  const areaH = Math.max(1, m.fieldTop - m.fieldBottom);
+  const gapX = 0.32;
+  const minGapY = 0.28;
+  const maxRows = (rowH: number) => Math.max(1, Math.floor((areaH + minGapY) / (rowH + minGapY)));
+
+  // Start above 1 so a sparse board (10-15 blocks) gets bigger, easier-to-read blocks; shrink until
+  // everything fits, in the fewest rows.
+  let scale = 1.25 * boost;
+  let rows: Entry[][] | null = null;
+  let bands: Band[] = [];
+  let gapY = 0;
+  for (;;) {
+    const rowH = BLOCK_H * scale;
+    for (let n = 1; n <= maxRows(rowH) && !rows; n++) {
+      ({ bands, gapY } = bandsFor(m, n, rowH, keepouts));
+      rows = fillBands(list, bands, gapX, scale, true) ?? fillBands(list, bands, gapX, scale, false);
+    }
+    if (rows || scale <= 0.55) break;
+    scale -= 0.05;
+  }
+  if (!rows) {
+    // Too many to fit even at the smallest size: deal them round-robin (they may touch).
+    ({ bands, gapY } = bandsFor(m, maxRows(BLOCK_H * scale), BLOCK_H * scale, keepouts));
+    const dealt: Entry[][] = bands.map(() => []);
+    list.forEach((e, i) => dealt[i % bands.length].push(e));
+    rows = dealt;
+  }
 
   rows.forEach((row, r) => {
+    if (!row.length) return;
+    const band = bands[r];
+    const areaW = Math.max(0, band.right - band.left);
     const rowW = row.reduce((sum, e) => sum + e.width * scale, 0) + (row.length - 1) * gapX;
     const slack = Math.max(0, areaW - rowW);
     const extraGap = row.length > 1 ? Math.min(0.6, (slack * 0.5) / (row.length - 1)) : 0;
     const usedW = rowW + extraGap * (row.length - 1);
-    let x = m.fieldLeft + (areaW - usedW) / 2 + (rand(r + 1, 7) - 0.5) * Math.min(0.8, areaW - usedW);
-    const y = midY + totalH / 2 - rowH / 2 - r * (rowH + gapY);
+    let x = band.left + (areaW - usedW) / 2 + (rand(r + 1, 7) - 0.5) * Math.min(0.8, Math.max(0, areaW - usedW));
     for (const e of row) {
       const w = e.width * scale;
       const s = e.seed * 1000;
       const jx = (rand(s, 1) - 0.5) * Math.min(0.16, gapX * 0.5 + extraGap * 0.5);
       const jy = (rand(s, 2) - 0.5) * Math.min(0.2, gapY * 0.6);
       const z = -0.55 + rand(s, 3) * 0.9;
-      homes.set(e.id, new THREE.Vector3(x + w / 2 + jx, y + jy, z));
+      homes.set(e.id, new THREE.Vector3(x + w / 2 + jx, band.y + jy, z));
       x += w + gapX + extraGap;
     }
   });

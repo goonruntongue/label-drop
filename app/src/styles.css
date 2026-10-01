@@ -636,7 +636,7 @@ button, input, select { font: inherit; color: inherit; }
   cursor: pointer;
 }
 .brief-act.is-icon { padding: 0; width: 32px; font-size: 14px; }
-/* Phones: stop short of the stage character's column (buddyReservePx in layout.ts), so it never covers the buttons. */
+/* Phones: stop short of the stage character's column (buddyCornerPx in layout.ts), so it never covers the buttons. */
 @media (max-width: 640px) { .brief-card { max-width: calc(100% - 12px - 108px); } }
 .brief-act:hover { background: color-mix(in srgb, var(--accent) 14%, transparent); }
 @media (pointer: coarse) { .brief-act { height: 44px; min-width: 44px; } .brief-act.is-icon { width: 44px; } }

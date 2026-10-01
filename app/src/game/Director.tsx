@@ -5,7 +5,7 @@ import * as THREE from 'three';
 import * as audio from '../audio';
 import { useGame } from '../state/store';
 import { decideTarget, velocity } from './input';
-import { layoutField, metrics, slotLocal, slotRotation, trayWidth, trayX } from './layout';
+import { buddyCornerPx, keepoutFromPx, layoutField, metrics, slotLocal, slotRotation, trayWidth, trayX, type Keepout } from './layout';
 import { rainbowHex, THEMES } from '../theme/themes';
 import {
   blocks,
@@ -163,7 +163,19 @@ export function Director() {
     // Homes stay put while blocks leave (a full reshuffle per throw is disorienting).
     // Re-layout only on resize, when a block returns without a home, or once the field has thinned out.
     const unsorted = game.items.filter((item) => !game.assign[item.id]);
-    const key = `${state.size.width}x${state.size.height}|${blocks.size}|${game.prefs.textSize}`;
+    // Keep-outs: the stage character's corner, and the brief card / pill (its size changes when folded).
+    const W = state.size.width;
+    const H = state.size.height;
+    const corner = buddyCornerPx(W);
+    const keepouts: Keepout[] = [keepoutFromPx(m, W, H, { left: W - corner.w, top: 0, right: W, bottom: corner.h })];
+    let briefKey = 'none';
+    if (dom.brief?.isConnected) {
+      const r = dom.brief.getBoundingClientRect();
+      const box = { left: r.left - view.rect.left, top: r.top - view.rect.top, right: r.right - view.rect.left, bottom: r.bottom - view.rect.top };
+      briefKey = [box.left, box.top, box.right, box.bottom].map((v) => Math.round(v / 8)).join(',');
+      keepouts.push(keepoutFromPx(m, W, H, box));
+    }
+    const key = `${W}x${H}|${blocks.size}|${game.prefs.textSize}|${briefKey}`;
     const homeless = unsorted.some((item) => !fieldHomes.has(item.id));
     const thinned = unsorted.length > 0 && unsorted.length <= field.count * 0.6;
     if (key !== field.key || homeless || thinned) {
@@ -177,6 +189,7 @@ export function Director() {
         })),
         m,
         game.prefs.textSize === 'large' ? 1.2 : 1,
+        keepouts,
       );
       fieldHomes.clear();
       result.homes.forEach((home, id) => fieldHomes.set(id, home));

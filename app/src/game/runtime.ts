@@ -118,6 +118,8 @@ export const drag = {
 
 export const dom = {
   stage: null as HTMLElement | null,
+  /** The brief card / pill over the stage's top-left: blocks keep out from under it. */
+  brief: null as HTMLElement | null,
   ghost: null as HTMLDivElement | null,
 };
 

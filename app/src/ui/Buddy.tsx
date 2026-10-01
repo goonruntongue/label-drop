@@ -2,8 +2,8 @@
 // for moments outside the answer check (everything placed, a new form). During the result it
 // stays behind the result card; the comment there speaks for it.
 // It stays mounted (hidden with CSS) so the 3D model isn't rebuilt every round.
-// The block field keeps a column free for it (see buddyReservePx), so it stays visible without
-// covering blocks. "awake" only gates the speech bubble.
+// The block field keeps its corner free (a keep-out, see buddyCornerPx), so it stays visible without
+// covering blocks; rows below it use the full width. "awake" only gates the speech bubble.
 // On narrow screens the trays stack under the stage; once the stage scrolls away, it follows down
 // and stands on the 答え合わせ button (or at the top of the screen past it) — see useDock.
 import { lazy, Suspense, useCallback, useEffect, useRef, useState } from 'react';

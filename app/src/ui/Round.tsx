@@ -6,6 +6,7 @@ import { cheerFor } from '../game/cheers';
 import { levelDef, MAX_LEVEL, STARS_TO_LEVEL_UP, titleFor } from '../game/levels';
 import { TRAY_GLYPHS, useGame } from '../state/store';
 import { THEMES } from '../theme/themes';
+import { dom } from '../game/runtime';
 import { useDialog } from './useDialog';
 
 function Stars({ value, max = 3, size }: { value: number; max?: number; size?: 'lg' }) {
@@ -123,7 +124,7 @@ export function BriefCard() {
 
   if (collapsed) {
     return (
-      <button type="button" className="brief-pill" onClick={toggle} aria-expanded={false} title="お題を開く">
+      <button type="button" className="brief-pill" ref={(el) => void (dom.brief = el)} onClick={toggle} aria-expanded={false} title="お題を開く">
         <span className="kicker">{tag}</span>
         <span className="brief-pill-arrow" aria-hidden="true">
           ▶
@@ -135,7 +136,7 @@ export function BriefCard() {
   // Two labelled buttons, one action each: the text itself does nothing when tapped
   // (it used to: the top half folded the card, the bottom half opened the brief — easy to mix up).
   return (
-    <div className="brief-card">
+    <div className="brief-card" ref={(el) => void (dom.brief = el)}>
       <div className="brief-card-head">
         <span className="kicker">{tag}</span>
         <div className="brief-card-actions">
