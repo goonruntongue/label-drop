@@ -278,6 +278,9 @@ export interface GameState {
   reveal: { index: number; preview: boolean } | null;
   showReveal(index: number, preview?: boolean): void;
   closeReveal(): void;
+  /** 答え合わせ pressed before the board is ready: the stage character explains what's missing. */
+  nudge: { reason: 'pending' | 'labels'; seq: number } | null;
+  nudgeSubmit(reason: 'pending' | 'labels'): void;
   /** Fix 7: animated how-to-play; opens by itself on the very first visit. */
   tutorialOpen: boolean;
   openTutorial(): void;
@@ -356,6 +359,8 @@ export const useGame = create<GameState>()((set, get) => {
     celebrating: false,
     galleryOpen: false,
     galleryIndex: 0,
+    nudge: null,
+    nudgeSubmit: (reason) => set({ nudge: { reason, seq: (get().nudge?.seq ?? 0) + 1 } }),
     tutorialOpen: !load<boolean>('practice-ia:tutorial-seen', false, () => true),
     openTutorial: () => set({ tutorialOpen: true }),
     closeTutorial: () => set({ tutorialOpen: false }),

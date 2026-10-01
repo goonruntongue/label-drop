@@ -73,7 +73,7 @@ function SubmitBar() {
   const level = useGame((s) => s.level);
   const result = useGame((s) => s.result);
   const resultOpen = useGame((s) => s.resultOpen);
-  const { submit, openResult, newRound } = useGame.getState();
+  const { submit, openResult, newRound, nudgeSubmit } = useGame.getState();
 
   const pending = items.filter((item) => !assign[item.id]).length;
   const labelsRequired = mode === 'free' || levelDef(level).labelsRequired;
@@ -115,7 +115,12 @@ function SubmitBar() {
           </li>
         ))}
       </ul>
-      <button type="button" className="btn btn-primary submit-button" disabled={!ready} onClick={submit}>
+      <button
+        type="button"
+        className={`btn btn-primary submit-button${ready ? '' : ' is-blocked'}`}
+        aria-disabled={!ready}
+        onClick={() => (ready ? submit() : nudgeSubmit(pending > 0 ? 'pending' : 'labels'))}
+      >
         答え合わせ
       </button>
     </section>

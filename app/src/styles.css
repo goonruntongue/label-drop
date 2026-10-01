@@ -1141,3 +1141,7 @@ body.is-dragging .buddy-figure, .buddy.is-hidden .buddy-figure { pointer-events:
   .tut-stars span { opacity: 1; }
 }
 .tut-head .btn-mini { width: auto; padding: 4px 10px; white-space: nowrap; writing-mode: horizontal-tb; }
+
+/* Not ready yet: looks disabled, but a press makes the stage character say what's missing. */
+.submit-button.is-blocked { opacity: 0.45; cursor: not-allowed; }
+.submit-button.is-blocked:hover { background: var(--accent); }

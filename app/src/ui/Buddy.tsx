@@ -57,6 +57,33 @@ function useTurn() {
 
 type Say = { text: string; id: number } | null;
 
+/** What the character says, by situation. */
+const LINES = {
+  half: '半分まで来たよ！ その調子',
+  placedNeedLabels: '全部置けたね！ 次は箱に名前を付けよう',
+  ready: '準備OK！ 答え合わせしてみよう',
+  nudgeLabels: '名前のない箱があるよ！ ラベルを付けてから答え合わせしよう',
+  nudgePending: 'まだ置いていないブロックがあるよ。全部、箱に入れてね',
+  newForm: '新しい姿になったよ！',
+};
+
+/** Said now and then while the player is working (never twice in a row). */
+const CHEERS = [
+  'いい調子！',
+  '迷ったら、お題の人の気持ちで考えてみて',
+  '似たもの同士、集まってきたね',
+  'ラベルは短く、わかりやすく！',
+  'その分け方、いい感じ',
+  'ゆっくりで大丈夫。じっくり考えよう',
+];
+const CHEER_EVERY_MS = 40000;
+
+const placedCount = (s: { items: { id: string }[]; assign: Record<string, string | null> }) =>
+  s.items.reduce((n, it) => (s.assign[it.id] ? n + 1 : n), 0);
+const allLabeled = (s: { trays: { label: string }[] }) => s.trays.every((t) => t.label.trim() !== '');
+const isReady = (s: Parameters<typeof placedCount>[0] & Parameters<typeof allLabeled>[0]) =>
+  s.items.length > 0 && placedCount(s) === s.items.length && allLabeled(s);
+
 export function Buddy() {
   const index = useGame(currentCharacterIndex);
   const hidden = useGame((s) => s.briefingOpen || s.celebrating || !!s.reveal);
@@ -73,11 +100,17 @@ export function Buddy() {
     sleepTimer.current = window.setTimeout(() => setAwake(false), ms);
   }, []);
 
-  const speak = useCallback((text: string, ms: number) => {
-    const my = ++sayId.current;
-    setSay({ text, id: my });
-    window.setTimeout(() => setSay((cur) => (cur?.id === my ? null : cur)), ms);
-  }, []);
+  const lastSpoke = useRef(performance.now());
+  const speak = useCallback(
+    (text: string, ms: number) => {
+      const my = ++sayId.current;
+      lastSpoke.current = performance.now();
+      wake(ms);
+      setSay({ text, id: my });
+      window.setTimeout(() => setSay((cur) => (cur?.id === my ? null : cur)), ms);
+    },
+    [wake],
+  );
 
   useEffect(
     () =>
@@ -89,16 +122,27 @@ export function Buddy() {
           react(stars >= 3 ? 'spin' : stars >= 1 ? 'hop' : 'sad');
           return;
         }
+        // 答え合わせ pressed too early.
+        if (s.nudge && s.nudge !== prev.nudge) {
+          react('sad');
+          speak(s.nudge.reason === 'labels' ? LINES.nudgeLabels : LINES.nudgePending, 4200);
+          return;
+        }
+        if (s.result || s.briefingOpen) return;
+        // Everything placed and named: ready to check (also when the last label gets its first letter).
+        if (isReady(s) && !isReady(prev) && s.items === prev.items) {
+          react('hop');
+          speak(LINES.ready, 4200);
+          return;
+        }
         // A block landed in a tray.
-        if (s.assign !== prev.assign && !s.result) {
-          const placed = (st: typeof s) => st.items.reduce((n, it) => (st.assign[it.id] ? n + 1 : n), 0);
-          const now = placed(s);
-          if (now > placed(prev)) {
-            react('nod'); // a small nod in the resting pose; no need to wake up
-            if (now === s.items.length) {
-              wake(3600);
-              speak('全部置けたね！ 答え合わせしてみよう', 3600);
-            }
+        if (s.assign !== prev.assign && s.items === prev.items) {
+          const now = placedCount(s);
+          const before = placedCount(prev);
+          if (now > before) {
+            react('nod');
+            if (now === s.items.length) speak(LINES.placedNeedLabels, 4200);
+            else if (now >= s.items.length / 2 && before < s.items.length / 2 && s.items.length >= 8) speak(LINES.half, 2800);
           }
         }
       }),
@@ -111,11 +155,25 @@ export function Buddy() {
     const changed = shownIndex.current !== null;
     shownIndex.current = index;
     react('appear');
-    if (changed) {
-      wake(3200);
-      speak('新しい姿になったよ！', 3200);
-    }
-  }, [hidden, index, speak, wake]);
+    if (changed) speak(LINES.newForm, 3200);
+  }, [hidden, index, speak]);
+
+  // Now and then, a word of encouragement while the player is working on the board.
+  useEffect(() => {
+    let last = -1;
+    const timer = window.setInterval(() => {
+      const s = useGame.getState();
+      const busy = s.result || s.briefingOpen || s.celebrating || s.reveal || s.galleryOpen || s.tutorialOpen || s.hintOpen;
+      if (busy || document.hidden || document.body.classList.contains('is-dragging')) return;
+      if (placedCount(s) === 0 || isReady(s)) return; // not started yet, or the "ready" line already said it
+      if (performance.now() - lastSpoke.current < CHEER_EVERY_MS) return;
+      let i = Math.floor(Math.random() * CHEERS.length);
+      if (i === last) i = (i + 1) % CHEERS.length;
+      last = i;
+      speak(CHEERS[i], 3600);
+    }, 5000);
+    return () => window.clearInterval(timer);
+  }, [speak]);
 
   return (
     <div className={`buddy${hidden ? ' is-hidden' : ''}${awake ? '' : ' is-resting'}`} aria-hidden="true">
