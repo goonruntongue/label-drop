@@ -6,11 +6,11 @@ import { LEGEND_INDEX } from '../game/characters';
 import { LEGEND_TITLE } from '../game/levels';
 import { useGame } from '../state/store';
 import { SafeBoundary } from './SafeBoundary';
+import { useDialog } from './useDialog';
 
 const CelebrationScene = lazy(() => import('../game/CelebrationScene'));
 const CharacterViewer = lazy(() => import('../game/CharacterViewer'));
 
-const reducedMotion = typeof matchMedia !== 'undefined' && matchMedia('(prefers-reduced-motion: reduce)').matches;
 const FINAL_TITLE = LEGEND_TITLE;
 const LINES = [
   '散らばった言葉たちは、あなたの手で居場所と名前を手に入れました。',
@@ -83,6 +83,8 @@ function CelebrationBody() {
   const clears = useGame((s) => s.clears);
   const totalStars = useGame((s) => s.totalStars);
   const rounds = useGame((s) => s.rounds);
+  const [reducedMotion] = useState(() => useGame.getState().prefs.motion !== 'full');
+  const dialog = useDialog<HTMLDivElement>(); // no Esc: it ends with its own button
   const [phase, setPhase] = useState<Phase>(reducedMotion ? 'done' : 'intro');
   const [skip, setSkip] = useState(reducedMotion);
   const shown = useTypewriter(phase === 'typing' || phase === 'done', skip);
@@ -100,7 +102,7 @@ function CelebrationBody() {
       window.setTimeout(() => setPhase('typing'), TYPE_AT),
     ];
     return () => timers.forEach((t) => window.clearTimeout(t));
-  }, []);
+  }, [reducedMotion]);
 
   useEffect(() => {
     if (shown >= TOTAL_CHARS) setPhase('done');
@@ -115,7 +117,7 @@ function CelebrationBody() {
   const finished = phase === 'done' && shown >= TOTAL_CHARS;
 
   return (
-    <div className={`celebration is-${phase}`} role="dialog" aria-modal="true" aria-label="クリアおめでとう">
+    <div className={`celebration is-${phase}`} role="dialog" aria-modal="true" aria-label="クリアおめでとう" ref={dialog}>
       {!reducedMotion && (
         <SafeBoundary>
           <Suspense fallback={null}>

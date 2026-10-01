@@ -6,6 +6,7 @@ import { cheerFor } from '../game/cheers';
 import { levelDef, MAX_LEVEL, STARS_TO_LEVEL_UP, titleFor } from '../game/levels';
 import { TRAY_GLYPHS, useGame } from '../state/store';
 import { THEMES } from '../theme/themes';
+import { useDialog } from './useDialog';
 
 function Stars({ value, max = 3, size }: { value: number; max?: number; size?: 'lg' }) {
   return (
@@ -27,6 +28,7 @@ export function BriefingOverlay() {
   const problemIndex = useGame((s) => s.problemIndex);
   const itemCount = useGame((s) => s.items.length);
   const trays = useGame((s) => s.trays);
+  const dialog = useDialog<HTMLDivElement>(() => useGame.getState().dismissBriefing(), open);
   if (!open) return null;
   const problem = PROBLEMS[problemIndex];
   const def = levelDef(level);
@@ -37,7 +39,7 @@ export function BriefingOverlay() {
   };
 
   return (
-    <div className="briefing" role="dialog" aria-modal="true" aria-label="お題">
+    <div className="briefing" role="dialog" aria-modal="true" aria-label="お題" ref={dialog}>
       <div className="briefing-card">
         {mode === 'level' ? (
           <p className="kicker">
@@ -173,6 +175,7 @@ export function ResultPanel() {
   const levelStars = useGame((s) => s.levelStars);
   const levelUpTo = useGame((s) => s.levelUpTo);
   const theme = THEMES[useGame((s) => s.theme)];
+  const dialog = useDialog<HTMLDivElement>(() => useGame.getState().closeResult(), !!result && open);
 
   if (!result || !open) return null;
   const trayById = new Map(trays.map((t) => [t.id, t]));
@@ -181,7 +184,7 @@ export function ResultPanel() {
   const cheer = cheerFor(result, levelUpTo);
 
   return (
-    <div className="result" role="dialog" aria-modal="true" aria-label="答え合わせ">
+    <div className="result" role="dialog" aria-modal="true" aria-label="答え合わせ" ref={dialog}>
       <div className="result-card">
         <p className="kicker">RESULT</p>
         {cheer && <p className="result-cheer">{cheer}</p>}

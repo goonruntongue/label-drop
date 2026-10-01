@@ -2,6 +2,7 @@
 // ("？ 遊び方"). Each step is a small looping CSS animation of the real gesture.
 import { useEffect, useState } from 'react';
 import { useGame } from '../state/store';
+import { useDialog } from './useDialog';
 
 export const TUTORIAL_SEEN_KEY = 'practice-ia:tutorial-seen';
 
@@ -62,6 +63,7 @@ export function Tutorial() {
     if (open) setStep(0);
   }, [open]);
 
+  const dialog = useDialog<HTMLDivElement>(() => close(), open);
   if (!open) return null;
   const close = () => {
     try {
@@ -75,7 +77,7 @@ export function Tutorial() {
   const last = step === STEPS.length - 1;
 
   return (
-    <div className="tut-modal" role="dialog" aria-modal="true" aria-labelledby="tut-title">
+    <div className="tut-modal" role="dialog" aria-modal="true" aria-labelledby="tut-title" ref={dialog}>
       <div className="tut-card">
         <header className="tut-head">
           <p className="kicker">

@@ -67,6 +67,7 @@ export function Director() {
     const ease = (k: number) => 1 - Math.exp(-k * dt);
     const game = useGame.getState();
     const tun = game.tuning;
+    const still = game.prefs.motion !== 'full'; // motion setting: no floating, no parallax
     const theme = THEMES[game.theme];
     accent.set(theme.accent);
     const cam = state.camera as THREE.PerspectiveCamera;
@@ -77,7 +78,7 @@ export function Director() {
     debug.camera = cam;
 
     // Camera rig: subtle parallax only, damped while dragging so aiming stays stable.
-    const parallax = tun.parallax * (drag.active ? 0.3 : 1);
+    const parallax = still ? 0 : tun.parallax * (drag.active ? 0.3 : 1);
     cam.position.x += (state.pointer.x * 0.7 * parallax - cam.position.x) * ease(3);
     cam.position.y += (CAMERA_Y + state.pointer.y * 0.35 * parallax - cam.position.y) * ease(3);
     cam.position.z = m.camZ;
@@ -330,7 +331,7 @@ export function Director() {
         tintTarget = 1;
         tintColor = trt.color;
       } else {
-        const A = tun.floatAmp;
+        const A = still ? 0 : tun.floatAmp;
         const sp = tun.floatSpeed;
         const ph = b.seed;
         tmp.a.copy(home ?? b.pos);

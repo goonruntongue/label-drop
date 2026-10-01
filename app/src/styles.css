@@ -400,7 +400,7 @@ button, input, select { font: inherit; color: inherit; }
   --line-soft: rgba(110, 80, 50, 0.16);
   --text-1: #3b3228;
   --text-2: #5e5243;
-  --text-3: #6e6150;
+  --text-3: #64584a;
   --accent: #a24a2f;
   --success: #5f7a3a;
   --warning: #8a5a12;
@@ -830,9 +830,8 @@ button, input, select { font: inherit; color: inherit; }
   border: 1px solid rgba(255, 255, 255, 0.25); background: rgba(0, 0, 0, 0.35);
   color: rgba(255, 255, 255, 0.8); font: inherit; font-size: 12px; cursor: pointer;
 }
-@media (prefers-reduced-motion: reduce) {
-  .celebration, .celebration-title, .medal, .medal-face, .celebration-rank, .celebration-after { animation: none; }
-}
+/* Motion setting 控えめ / 停止 (data-motion on <html>, from the settings panel; the OS setting is its default). */
+:root:not([data-motion="full"]) :is(.celebration, .celebration-title, .medal, .medal-face, .celebration-rank, .celebration-after) { animation: none; }
 
 /* ---------- Debug panel (?debug) ---------- */
 .debug-toggle, .debug-panel { position: fixed; left: 12px; bottom: 12px; z-index: 120; font-size: 12px; }
@@ -905,7 +904,7 @@ button, input, select { font: inherit; color: inherit; }
   12%, 82% { opacity: 1; transform: none; }
   100% { opacity: 0; }
 }
-@media (prefers-reduced-motion: reduce) { .round-fx * { animation-duration: 1ms !important; animation-delay: 0ms !important; } }
+:root:not([data-motion="full"]) .round-fx * { animation-duration: 1ms !important; animation-delay: 0ms !important; }
 
 /* ---------- Characters: level-up reveal + gallery ---------- */
 .btn-gallery { gap: 4px; white-space: nowrap; }
@@ -1144,12 +1143,121 @@ body.is-dragging .buddy-figure, .buddy.is-hidden .buddy-figure { pointer-events:
 @keyframes tut-star { 0%, 30% { opacity: 0; transform: scale(0.2); } 38% { opacity: 1; transform: scale(1.35); } 46%, 88% { opacity: 1; transform: scale(1); } 100% { opacity: 0; transform: scale(1); } }
 @keyframes tut-ok { 0%, 30% { box-shadow: none; } 38%, 85% { box-shadow: 0 0 0 3px #7cf0b5, 0 0 14px #7cf0b5; } 100% { box-shadow: none; } }
 
-@media (prefers-reduced-motion: reduce) {
-  .tut-scene * { animation: none !important; }
-  .tut-stars span { opacity: 1; }
-}
+:root:not([data-motion="full"]) .tut-scene * { animation: none !important; }
+:root:not([data-motion="full"]) .tut-stars span { opacity: 1; }
 .tut-head .btn-mini { width: auto; padding: 4px 10px; white-space: nowrap; writing-mode: horizontal-tb; }
 
 /* Not ready yet: looks disabled, but a press makes the stage character say what's missing. */
 .submit-button.is-blocked { opacity: 0.45; cursor: not-allowed; }
 .submit-button.is-blocked:hover { background: var(--accent); }
+
+/* ---------- Header: wraps instead of scrolling sideways ---------- */
+.app { grid-template-rows: auto 1fr; }
+.hud { flex-wrap: wrap; row-gap: 6px; min-height: var(--hud-h); padding-top: 6px; padding-bottom: 6px; overflow: visible; }
+.hud-break { display: none; }
+@media (max-width: 900px) { .hud { overflow: visible; } }
+/* Phones: two rows — brand + main actions / level + topic. The rest lives in the settings panel. */
+@media (max-width: 640px) {
+  .hud { gap: 8px; }
+  .hud .hud-wide, .hud-progress, .hud-field > .kicker, .hud-title { display: none; }
+  .hud-brand { order: 0; }
+  .hud-actions { order: 1; margin-left: auto; gap: 4px; }
+  .hud-break { display: block; order: 2; flex-basis: 100%; height: 0; }
+  .hud-level, .hud-topic, .hud-stepper { order: 3; }
+  .hud > .hud-topic { flex: 1 1 0; min-width: 0; }
+  .hud-topic select { width: 100%; min-width: 0; text-overflow: ellipsis; }
+  .hud-actions > .btn-hint { width: 44px; height: 44px; padding: 0; justify-content: center; }
+  .hud-actions > .btn-hint .btn-hint-text { display: none; }
+  .hud-actions > .btn-icon { width: 44px; height: 44px; }
+}
+/* Smallest phones (≤360px, e.g. iPhone SE): slightly smaller buttons keep the first row in one line. */
+@media (max-width: 360px) {
+  .hud-actions > .btn-hint, .hud-actions > .btn-icon { width: 40px; height: 40px; }
+}
+
+/* ---------- Settings panel (header, far right) ---------- */
+.settings {
+  position: fixed;
+  top: calc(var(--hud-real, var(--hud-h)) + 8px);
+  right: 12px;
+  z-index: 55;
+  width: 320px;
+  max-height: calc(100dvh - var(--hud-real, var(--hud-h)) - 24px);
+  overflow: auto;
+  overscroll-behavior: contain;
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  padding: 16px;
+  border-radius: var(--r-card);
+  border: 1px solid var(--line);
+  background: var(--surface-raised, var(--bg-1));
+  box-shadow: 0 12px 32px rgba(0, 0, 0, 0.35);
+  color: var(--text-2);
+  font-size: 13px;
+}
+@media (max-width: 640px) {
+  .settings {
+    top: auto; left: 0; right: 0; bottom: 0; width: auto; max-height: 84dvh;
+    border-radius: var(--r-card) var(--r-card) 0 0;
+    padding-bottom: max(16px, env(safe-area-inset-bottom));
+  }
+}
+.settings-head { display: flex; justify-content: space-between; align-items: flex-start; }
+.settings-head h2 { margin: 2px 0 0; font-size: 18px; color: var(--text-1); }
+.settings-group, .settings-more { display: flex; flex-direction: column; gap: 14px; }
+.settings-more { display: none; padding-bottom: 16px; border-bottom: 1px solid var(--line-soft); }
+@media (max-width: 640px) { .settings-more { display: flex; } }
+.settings-field { display: flex; flex-direction: column; gap: 6px; min-width: 0; margin: 0; padding: 0; border: 0; }
+.settings-field legend { padding: 0; margin-bottom: 6px; }
+.settings-field legend, .settings-legend { font-weight: 700; color: var(--text-1); }
+.settings-field select {
+  min-height: 44px;
+  background: var(--bg-1);
+  border: 1px solid var(--line-soft);
+  border-radius: var(--r-ctl);
+  padding: 6px 10px;
+}
+.settings-field small, .settings-check small { display: block; margin-top: 2px; color: var(--text-3); font-size: 11px; font-weight: 500; line-height: 1.6; }
+.segmented { display: flex; border: 1px solid var(--line); border-radius: var(--r-ctl); overflow: hidden; }
+.segmented label { position: relative; flex: 1; display: grid; place-items: center; min-height: 40px; color: var(--text-2); font-weight: 700; cursor: pointer; }
+.segmented label + label { border-left: 1px solid var(--line-soft); }
+.segmented label.is-on { background: color-mix(in srgb, var(--accent) 20%, transparent); color: var(--text-1); }
+.segmented input { position: absolute; inset: 0; margin: 0; opacity: 0; cursor: pointer; }
+.segmented label:has(input:focus-visible) { outline: 2px solid var(--accent); outline-offset: -2px; }
+.settings-check { display: flex; align-items: flex-start; gap: 10px; color: var(--text-1); font-weight: 700; cursor: pointer; }
+.settings-check input { flex: none; width: 20px; height: 20px; margin: 1px 0 0; accent-color: var(--accent); }
+.settings-buttons { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
+.settings-buttons .btn { display: inline-flex; align-items: center; justify-content: center; gap: 6px; width: 100%; min-height: 44px; }
+.settings-advanced { display: flex; flex-direction: column; gap: 8px; padding-top: 12px; border-top: 1px solid var(--line-soft); }
+.settings-advanced summary { color: var(--text-2); font-weight: 700; cursor: pointer; }
+.settings-advanced[open] summary { margin-bottom: 4px; }
+
+/* ---------- Touch targets: 44px on touch screens (SPEC 5.5) ---------- */
+@media (pointer: coarse) {
+  .btn, .chip, .tray-label, .brief-pill, .hud-me, .hud-field select, .unsorted > summary { min-height: 44px; }
+  .btn-mini { width: 44px; height: 44px; }
+  .tut-head .btn-mini { height: 44px; }
+  .unsorted > summary { display: flex; align-items: center; }
+}
+
+/* ---------- Text size 大 (settings): the reading panels scale up ---------- */
+:root[data-text-size="large"] :is(.pane, .brief-card, .briefing-card, .result-card, .tut-card, .char-card, .save-slots, .settings, .hint-panel) { zoom: 1.15; }
+:root[data-text-size="large"] :is(.keyword-tip, .buddy-say) { font-size: 1.15em; }
+
+/* ---------- Motion 停止 (settings): nothing animates ---------- */
+:root[data-motion="off"] *, :root[data-motion="off"] *::before, :root[data-motion="off"] *::after {
+  animation-duration: 1ms !important;
+  animation-delay: 0ms !important;
+  animation-iteration-count: 1 !important;
+  transition-duration: 1ms !important;
+  scroll-behavior: auto !important;
+}
+
+/* ---------- Color-vision support (settings): tray symbols larger, and on every chip in a tray ---------- */
+:root[data-color-assist="on"] .tray-glyph { font-size: 1.45em; line-height: 1; }
+:root[data-color-assist="on"] .tray-card .chip::before { content: var(--glyph); color: var(--tray); font-weight: 900; }
+
+/* Keyboard help: only where there is a keyboard-like pointer. */
+.kbd-note { margin: 8px 0 0; font-size: 11px; line-height: 1.6; color: var(--text-3); }
+@media (pointer: coarse) { .kbd-note { display: none; } }

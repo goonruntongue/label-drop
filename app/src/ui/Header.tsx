@@ -1,12 +1,13 @@
-import { useEffect, useState, type ReactNode } from 'react';
+import { useCallback, useEffect, useState, type ReactNode } from 'react';
 import * as audio from '../audio';
 import { PROBLEMS, TIER_LABELS, type Tier } from '../data/problems';
 import { LEGEND_TITLE, MAX_LEVEL, STARS_TO_LEVEL_UP, titleFor } from '../game/levels';
 import { clampBlockCount, MAX_BLOCKS, MIN_BLOCKS, SAVE_SLOT_COUNT, useGame, type Mode } from '../state/store';
-import { THEME_IDS, type ThemeId } from '../theme/themes';
 import { currentCharacterIndex } from '../game/characters';
 import { useFace } from '../game/faces';
 import { DeviceButton } from './DevicePanel';
+import { SettingsPanel } from './Overlays';
+import { useDialog } from './useDialog';
 
 const ICONS = {
   undo: 'M9 14 4 9l5-5M4 9h10.5a5.5 5.5 0 0 1 0 11H11',
@@ -174,10 +175,11 @@ function SaveSlots({ onClose }: { onClose: () => void }) {
   // Re-render when mode / level change so the "can't load here" reasons stay current.
   useGame((s) => `${s.mode}:${s.level}`);
   const { saveToSlot, loadFromSlot, slotBlocked } = useGame.getState();
+  const dialog = useDialog<HTMLElement>(onClose);
   const format = (iso: string) => new Intl.DateTimeFormat('ja-JP', { month: 'numeric', day: 'numeric', hour: '2-digit', minute: '2-digit' }).format(new Date(iso));
   return (
     <div className="save-slots-backdrop" role="presentation" onMouseDown={onClose}>
-      <section className="save-slots" role="dialog" aria-modal="true" aria-labelledby="save-slots-title" onMouseDown={(e) => e.stopPropagation()}>
+      <section className="save-slots" role="dialog" aria-modal="true" aria-labelledby="save-slots-title" onMouseDown={(e) => e.stopPropagation()} ref={dialog}>
         <header><div><span className="kicker">LOCAL SAVE</span><h2 id="save-slots-title">セーブスロット</h2></div><button type="button" className="btn-icon" aria-label="閉じる" onClick={onClose}>×</button></header>
         <p>
           保存するのは<b>解いている途中の盤面だけ</b>です（レベル・★・称号・👑は保存しません。いつも今の進み具合のままです）。この端末のブラウザ内にだけ保存します。
@@ -231,7 +233,7 @@ function ResetProgress({ onDone }: { onDone: () => void }) {
       clears > 0 ? `・👑 クリアの証（${clears}回）→ 消えます` : null,
       '・集めた★・答え合わせの回数の記録 → 0 に戻ります',
       '',
-      'セーブスロットの盤面・テーマ・音の設定は残ります。',
+      'セーブスロットの盤面と、設定（デザイン・文字サイズ・モーションなど）は残ります。',
       '本当にリセットしますか？',
     ].filter((l) => l !== null);
     if (!window.confirm(lines.join('\n'))) return;
@@ -261,28 +263,49 @@ export function Header() {
   const canUndo = useGame((s) => s.history.length > 0);
   const muted = useGame((s) => s.muted);
   const tuningOpen = useGame((s) => s.tuningOpen);
-  const theme = useGame((s) => s.theme);
   const hintOpen = useGame((s) => s.hintOpen);
   const mode = useGame((s) => s.mode);
-  const { loadProblem, undo, toggleMute, toggleTuning, setTheme, toggleHint, setMode } = useGame.getState();
+  const { loadProblem, undo, toggleMute, toggleTuning, toggleHint, setMode } = useGame.getState();
+
+  const modeSelect = (
+    <select value={mode} onChange={(e) => setMode(e.target.value as Mode)}>
+      <option value="level">レベルアップ</option>
+      <option value="free">無制限</option>
+    </select>
+  );
+  const soundLabel = muted ? 'サウンドをオンにする' : 'サウンドをオフにする';
+  const openGallery = () => useGame.getState().openGallery();
+  const openTutorial = () => useGame.getState().openTutorial();
+  const openSave = () => {
+    if (useGame.getState().tuningOpen) toggleTuning();
+    setSaveOpen(true);
+  };
+
+  // Narrow screens (≤640px) lay the header out in two rows with no sideways scrolling (see styles.css):
+  // what doesn't fit there (.hud-wide) is offered inside the settings panel instead (.settings-more).
+  // The header's real height (it wraps on narrow screens), for panels placed under it.
+  const measure = useCallback((el: HTMLElement | null) => {
+    if (!el) return;
+    const set = () => document.documentElement.style.setProperty('--hud-real', `${el.offsetHeight}px`);
+    set();
+    new ResizeObserver(set).observe(el);
+  }, []);
 
   return (
-    <header className="hud">
+    <header className="hud" ref={measure}>
       <div className="hud-brand">
         <AppIdentity />
         <span className="badge">P1 · 練習版</span>
       </div>
-      <label className="hud-field">
+      <label className="hud-field hud-wide">
         <span className="kicker">MODE</span>
-        <select value={mode} onChange={(e) => setMode(e.target.value as Mode)}>
-          <option value="level">レベルアップ</option>
-          <option value="free">無制限</option>
-        </select>
+        {modeSelect}
       </label>
+      <span className="hud-break" aria-hidden="true" />
       {mode === 'level' && <LevelMeter />}
-      <label className="hud-field">
+      <label className="hud-field hud-topic">
         <span className="kicker">TOPIC</span>
-        <select value={problemIndex} onChange={(e) => loadProblem(Number(e.target.value))}>
+        <select value={problemIndex} onChange={(e) => loadProblem(Number(e.target.value))} aria-label="お題">
           {(Object.keys(TIER_LABELS) as Tier[]).map((tier) => (
             <optgroup key={tier} label={TIER_LABELS[tier]}>
               {PROBLEMS.map((p, i) =>
@@ -297,16 +320,6 @@ export function Header() {
         </select>
       </label>
       {mode === 'free' && <BlockCountField />}
-      <label className="hud-field">
-        <span className="kicker">DESIGN</span>
-        <select value={theme} onChange={(e) => setTheme(e.target.value as ThemeId)}>
-          {THEME_IDS.map((id) => (
-            <option key={id} value={id}>
-              {id}
-            </option>
-          ))}
-        </select>
-      </label>
       <div className="hud-progress" role="status" aria-label={`分類済み ${done} / ${total}`}>
         <span className="kicker">SORTED</span>
         <span className="num">
@@ -318,24 +331,27 @@ export function Header() {
         </span>
       </div>
       <div className="hud-actions">
-        <button type="button" className="btn btn-gallery" title="魔法使い図鑑（キャラクター）" onClick={() => useGame.getState().openGallery()}>
+        <button type="button" className="btn btn-gallery hud-wide" title="魔法使い図鑑（キャラクター）" onClick={openGallery}>
           {mode === 'free' ? <Face className="hud-face is-small" /> : null}
           <span aria-hidden="true">📖</span>
           図鑑
         </button>
-        <button type="button" className="btn" title="遊び方（アニメーションで説明）" onClick={() => useGame.getState().openTutorial()}>
+        <button type="button" className="btn hud-wide" title="遊び方（アニメーションで説明）" onClick={openTutorial}>
           ？ 遊び方
         </button>
-        <DeviceButton />
+        <span className="hud-wide">
+          <DeviceButton />
+        </span>
         <button
           type="button"
           className={`btn btn-hint${hintOpen ? ' is-on' : ''}`}
           aria-pressed={hintOpen}
+          aria-label="ヒント（考え方ガイド）"
           title="考え方ガイド (H)"
           onClick={toggleHint}
         >
           <Icon d={ICONS.hint} />
-          ヒント
+          <span className="btn-hint-text">ヒント</span>
         </button>
         <IconButton label="元に戻す (Ctrl+Z)" disabled={!canUndo} onClick={() => undo() && audio.drop()}>
           <Icon d={ICONS.undo} />
@@ -343,16 +359,49 @@ export function Header() {
         <IconButton label="最初からやり直す" onClick={() => loadProblem(problemIndex)}>
           <Icon d={ICONS.reset} />
         </IconButton>
-        <IconButton label="セーブスロット" pressed={saveOpen} onClick={() => setSaveOpen(true)}>
-          <Icon d={ICONS.save} />
-        </IconButton>
-        <IconButton label={muted ? 'サウンドをオンにする' : 'サウンドをオフにする'} pressed={!muted} onClick={toggleMute}>
-          <Icon d={muted ? ICONS.mute : ICONS.sound} />
-        </IconButton>
-        <IconButton label="チューニング (T)" pressed={tuningOpen} onClick={toggleTuning}>
+        <span className="hud-wide">
+          <IconButton label="セーブスロット" pressed={saveOpen} onClick={openSave}>
+            <Icon d={ICONS.save} />
+          </IconButton>
+        </span>
+        <span className="hud-wide">
+          <IconButton label={soundLabel} pressed={!muted} onClick={toggleMute}>
+            <Icon d={muted ? ICONS.mute : ICONS.sound} />
+          </IconButton>
+        </span>
+        <button
+          type="button"
+          className="btn-icon"
+          aria-label="設定 (T)"
+          title="設定 (T)"
+          aria-expanded={tuningOpen}
+          data-settings-toggle=""
+          onClick={toggleTuning}
+        >
           <Icon d={ICONS.tune} />
-        </IconButton>
+        </button>
       </div>
+      <SettingsPanel>
+        <label className="settings-field">
+          <span className="settings-legend">モード</span>
+          {modeSelect}
+        </label>
+        <div className="settings-buttons">
+          <button type="button" className="btn" onClick={openGallery}>
+            📖 図鑑
+          </button>
+          <button type="button" className="btn" onClick={openTutorial}>
+            ？ 遊び方
+          </button>
+          <button type="button" className="btn" onClick={openSave}>
+            <Icon d={ICONS.save} /> セーブ
+          </button>
+          <button type="button" className="btn" aria-pressed={!muted} onClick={toggleMute}>
+            <Icon d={muted ? ICONS.mute : ICONS.sound} /> {muted ? 'サウンド オフ' : 'サウンド オン'}
+          </button>
+          <DeviceButton />
+        </div>
+      </SettingsPanel>
       {saveOpen && <SaveSlots onClose={() => setSaveOpen(false)} />}
     </header>
   );

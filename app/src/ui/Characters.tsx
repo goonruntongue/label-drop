@@ -1,10 +1,11 @@
 // Characters: the level-up reveal ("新しい姿を手に入れた！") and the character gallery (魔法使い図鑑).
 // The 3D viewer is lazy-loaded so the models and viewer code only download when first needed.
-import { lazy, Suspense, useEffect } from 'react';
+import { lazy, Suspense } from 'react';
 import { CHARACTER_COUNT, characterLabel, characterTitle, LEGEND_INDEX } from '../game/characters';
 import { useFace } from '../game/faces';
 import { useGame } from '../state/store';
 import { SafeBoundary } from './SafeBoundary';
+import { useDialog } from './useDialog';
 
 const CharacterViewer = lazy(() => import('../game/CharacterViewer'));
 
@@ -36,21 +37,14 @@ function SlotFace({ index, unlocked }: { index: number; unlocked: boolean }) {
   );
 }
 
-function useEscape(onClose: () => void) {
-  useEffect(() => {
-    const onKey = (e: KeyboardEvent) => e.key === 'Escape' && onClose();
-    window.addEventListener('keydown', onKey);
-    return () => window.removeEventListener('keydown', onKey);
-  }, [onClose]);
-}
-
 /** After the LEVEL UP banner: the new character on its pedestal. */
 export function CharacterReveal() {
   const reveal = useGame((s) => s.reveal);
   const closeReveal = useGame((s) => s.closeReveal);
+  const dialog = useDialog<HTMLDivElement>(closeReveal, !!reveal);
   if (!reveal) return null;
   return (
-    <div className="char-modal is-reveal" role="dialog" aria-modal="true" aria-label="新しい姿">
+    <div className="char-modal is-reveal" role="dialog" aria-modal="true" aria-label="新しい姿" ref={dialog}>
       <div className="char-card">
         <p className="kicker">NEW CHARACTER</p>
         <h2 className="char-reveal-title">新しい姿を手に入れた！</h2>
@@ -91,9 +85,9 @@ function GalleryBody(props: {
   openGallery: (i: number) => void;
 }) {
   const { index, unlocked, got, bestLevel, clears, closeGallery, openGallery } = props;
-  useEscape(closeGallery);
+  const dialog = useDialog<HTMLDivElement>(closeGallery);
   return (
-    <div className="char-modal" role="dialog" aria-modal="true" aria-labelledby="gallery-title" onMouseDown={closeGallery}>
+    <div className="char-modal" role="dialog" aria-modal="true" aria-labelledby="gallery-title" onMouseDown={closeGallery} ref={dialog}>
       <div className="char-card is-gallery" onMouseDown={(e) => e.stopPropagation()}>
         <header className="char-head">
           <div>

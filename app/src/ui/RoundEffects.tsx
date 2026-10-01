@@ -12,7 +12,6 @@ import { useGame } from '../state/store';
 import { SafeBoundary } from './SafeBoundary';
 
 const CelebrationScene = lazy(() => import('../game/CelebrationScene'));
-const reducedMotion = typeof matchMedia !== 'undefined' && matchMedia('(prefers-reduced-motion: reduce)').matches;
 const DURATION: Record<'clear' | 'levelup', number> = { clear: 2600, levelup: 4200 };
 /** When the result panel opens (the banner is gone by then). */
 const HOLD: Record<'clear' | 'levelup', number> = { clear: 1500, levelup: 3100 };
@@ -80,7 +79,7 @@ export function RoundEffects() {
   if (!show) return null;
   return (
     <div key={show.id} className={`round-fx is-${show.variant}`} aria-hidden="true">
-      {!reducedMotion && (
+      {useGame.getState().prefs.motion === 'full' && (
         <SafeBoundary>
           <Suspense fallback={null}>
             <CelebrationScene variant={show.variant} />

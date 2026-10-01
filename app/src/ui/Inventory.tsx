@@ -43,6 +43,7 @@ export function Inventory() {
         <summary>
           ペンディングエリア（未分類） <span className="num">{unsorted.length}</span>
         </summary>
+        <p className="kbd-note">キーボード：ブロックを選んで、1〜{trays.length} キーで箱へ。Ctrl+Z で元に戻す</p>
         <div className="chips">
           {unsorted.map((item) => (
             <button
@@ -205,7 +206,7 @@ function TrayCard({ tray, index }: { tray: Tray; index: number }) {
     <section
       className={`tray-card${isTarget ? ' is-target' : ''}`}
       data-tray-id={tray.id}
-      style={{ '--tray': color } as CSSProperties}
+      style={{ '--tray': color, '--glyph': `"${TRAY_GLYPHS[tray.colorIndex]}"` } as CSSProperties}
       onClick={onCardClick}
     >
       <header className="tray-card-head">

@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useLayoutEffect, useState } from 'react';
 import * as audio from './audio';
 import { PROBLEMS } from './data/problems';
 import { sendTo } from './game/input';
@@ -9,7 +9,6 @@ import { useGame } from './state/store';
 import { Header } from './ui/Header';
 import { HintPanel } from './ui/HintPanel';
 import { Inventory } from './ui/Inventory';
-import { TuningPanel } from './ui/Overlays';
 import { BriefCard, BriefingOverlay, KeywordTip, ResultPanel } from './ui/Round';
 import { Celebration } from './ui/Celebration';
 import { DebugPanel } from './ui/DebugPanel';
@@ -68,9 +67,17 @@ export default function App() {
   const [ready, setReady] = useState(false);
   const announcement = useGame((s) => s.announcement);
   const theme = useGame((s) => s.theme);
+  const prefs = useGame((s) => s.prefs);
   useEffect(() => {
     document.documentElement.dataset.theme = theme;
   }, [theme]);
+  // Settings (5.6) as attributes on <html>, read by styles.css.
+  useLayoutEffect(() => {
+    const root = document.documentElement.dataset;
+    root.textSize = prefs.textSize;
+    root.motion = prefs.motion;
+    root.colorAssist = prefs.colorAssist ? 'on' : 'off';
+  }, [prefs]);
   useEffect(() => {
     void preloadFonts().then(() => setReady(true));
   }, []);
@@ -99,7 +106,6 @@ export default function App() {
           )}
           <Buddy />
           <BriefCard />
-          <TuningPanel />
           <HintPanel />
           <ResultPanel />
           <BriefingOverlay />

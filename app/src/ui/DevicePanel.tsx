@@ -4,6 +4,7 @@
 // instead, because a "localhost" QR code can't be opened from another device.
 import QRCode from 'qrcode';
 import { useEffect, useState } from 'react';
+import { useDialog } from './useDialog';
 
 const LAN_URLS: string[] = __LAN_URLS__;
 
@@ -43,6 +44,7 @@ function SharePopover({ onClose }: { onClose: () => void }) {
   const [qr, setQr] = useState('');
   const [copied, setCopied] = useState(false);
   const url = urls[index];
+  const dialog = useDialog<HTMLDivElement>(onClose);
 
   useEffect(() => {
     if (!url) return;
@@ -73,7 +75,7 @@ function SharePopover({ onClose }: { onClose: () => void }) {
   };
 
   return (
-    <div className="device-popover" role="dialog" aria-label="このアプリを共有">
+    <div className="device-popover" role="dialog" aria-label="このアプリを共有" ref={dialog}>
       <div className="device-head">
         <p className="kicker">{lan ? 'SAME-LAN DEVICE TEST' : 'SHARE LABEL DROP'}</p>
         <button type="button" className="btn-mini" aria-label="閉じる" onClick={onClose}>

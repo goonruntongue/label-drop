@@ -44,13 +44,26 @@ export type Mode = 'level' | 'free';
 const reducedMotion =
   typeof matchMedia !== 'undefined' && matchMedia('(prefers-reduced-motion: reduce)').matches;
 
+/** Player settings (5.6): text size, motion, color-vision support. */
+export type TextSize = 'normal' | 'large';
+/** full: everything moves. reduced: no floating, parallax or 3D celebrations. off: no animation at all. */
+export type Motion = 'full' | 'reduced' | 'off';
+export interface Prefs {
+  textSize: TextSize;
+  motion: Motion;
+  /** Color-vision support: tray symbols are shown larger and on every chip. */
+  colorAssist: boolean;
+}
+export const DEFAULT_PREFS: Prefs = { textSize: 'normal', motion: reducedMotion ? 'reduced' : 'full', colorAssist: false };
+
+// Floating and parallax are switched off by the motion setting, not here.
 export const DEFAULT_TUNING: Tuning = {
-  floatAmp: reducedMotion ? 0 : 0.14,
+  floatAmp: 0.14,
   floatSpeed: 1,
   throwSpeed: 850,
   aimAngle: 22,
   hitExpand: 1.3,
-  parallax: reducedMotion ? 0 : 0.5,
+  parallax: 0.5,
   bloom: 0.8,
   guide: true,
 };
@@ -75,6 +88,7 @@ function save(key: string, value: string) {
 
 const TUNING_KEY = 'practice-ia:p0:tuning';
 const THEME_KEY = 'practice-ia:theme';
+const PREFS_KEY = 'practice-ia:prefs';
 const BLOCK_COUNT_KEY = 'practice-ia:block-count';
 const PROGRESS_KEY = 'practice-ia:progress';
 const SAVE_SLOTS_KEY = 'practice-ia:save-slots:v1';
@@ -130,6 +144,15 @@ function loadSaveSlots(): Array<SaveSlot | null> {
 }
 
 const loadTuning = () => load<Tuning>(TUNING_KEY, DEFAULT_TUNING, (raw) => ({ ...DEFAULT_TUNING, ...(JSON.parse(raw) as Partial<Tuning>) }));
+const loadPrefs = () =>
+  load<Prefs>(PREFS_KEY, DEFAULT_PREFS, (raw) => {
+    const p = JSON.parse(raw) as Partial<Prefs>;
+    return {
+      textSize: p.textSize === 'large' ? 'large' : 'normal',
+      motion: p.motion === 'reduced' || p.motion === 'off' || p.motion === 'full' ? p.motion : DEFAULT_PREFS.motion,
+      colorAssist: p.colorAssist === true,
+    };
+  });
 const loadTheme = () => load<ThemeId>(THEME_KEY, 'midnight-blue', (raw) => (raw in THEMES ? (raw as ThemeId) : undefined));
 const loadProgress = () =>
   load<Progress>(PROGRESS_KEY, { mode: 'level', level: 1, levelStars: 0, totalStars: 0, rounds: 0, bestLevel: 1 }, (raw) => {
@@ -246,6 +269,7 @@ export interface GameState {
   tuningOpen: boolean;
   announcement: string;
   theme: ThemeId;
+  prefs: Prefs;
   blockCount: number;
   hintOpen: boolean;
   axisHintShown: boolean;
@@ -310,6 +334,7 @@ export interface GameState {
   revealAxisHint(): void;
   recordAssist(kind: 'some' | 'all'): void;
   setTheme(theme: ThemeId): void;
+  setPrefs(patch: Partial<Prefs>): void;
   setBlockCount(count: number): void;
   loadProblem(index: number): void;
   moveItem(itemId: string, to: string | null, record?: boolean): void;
@@ -350,6 +375,7 @@ export const useGame = create<GameState>()((set, get) => {
     tuningOpen: false,
     announcement: '',
     theme: loadTheme(),
+    prefs: loadPrefs(),
     blockCount: initialBlockCount,
     hintOpen: false,
     peek: null,
@@ -495,6 +521,11 @@ export const useGame = create<GameState>()((set, get) => {
     setTheme: (theme) => {
       save(THEME_KEY, theme);
       set({ theme });
+    },
+    setPrefs: (patch) => {
+      const prefs = { ...get().prefs, ...patch };
+      save(PREFS_KEY, JSON.stringify(prefs));
+      set({ prefs });
     },
 
     loadProblem: (index) => {

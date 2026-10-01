@@ -5,6 +5,7 @@ import { useGLTF } from '@react-three/drei';
 import { Canvas, useFrame } from '@react-three/fiber';
 import { Suspense, useEffect, useMemo, useRef } from 'react';
 import * as THREE from 'three';
+import { useGame } from '../state/store';
 import { characterUrl } from './characters';
 import { ensureFace } from './faces';
 
@@ -63,9 +64,11 @@ function Figure({ index }: { index: number }) {
         buddySpin.pitch += (0 - buddySpin.pitch) * (1 - Math.exp(-2.5 * dt));
       }
     }
-    const t = clock.elapsedTime;
+    // Motion setting: "reduced" stops the idle sway, "off" also the reactions (turning by hand still works).
+    const motion = useGame.getState().prefs.motion;
+    const t = motion === 'full' ? clock.elapsedTime : 0;
     const since = performance.now() / 1000 - buddyCue.at;
-    const r = buddyCue.reaction && since < DURATION[buddyCue.reaction] ? buddyCue.reaction : null;
+    const r = motion !== 'off' && buddyCue.reaction && since < DURATION[buddyCue.reaction] ? buddyCue.reaction : null;
     const p = r ? since / DURATION[r] : 0;
 
     // Idle: breathe and glance around.
