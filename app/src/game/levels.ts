@@ -50,6 +50,9 @@ export const TITLES = [
   'IA大賢者',
 ] as const;
 
+/** Earned by passing the Lv10 final exam (★5); one rank above the Lv10 title. */
+export const LEGEND_TITLE = '伝説のIA大賢者';
+
 export function titleFor(level: number): string {
   return TITLES[Math.min(MAX_LEVEL, Math.max(1, level)) - 1];
 }

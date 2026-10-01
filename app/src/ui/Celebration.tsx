@@ -2,13 +2,13 @@
 // then the title appears and the closing message is typed out slowly, like a typewriter.
 import { lazy, Suspense, useEffect, useState } from 'react';
 import * as audio from '../audio';
-import { TITLES } from '../game/levels';
+import { LEGEND_TITLE } from '../game/levels';
 import { useGame } from '../state/store';
 
 const CelebrationScene = lazy(() => import('../game/CelebrationScene'));
 
 const reducedMotion = typeof matchMedia !== 'undefined' && matchMedia('(prefers-reduced-motion: reduce)').matches;
-const FINAL_TITLE = TITLES[TITLES.length - 1];
+const FINAL_TITLE = LEGEND_TITLE;
 const LINES = [
   '散らばった言葉たちは、あなたの手で居場所と名前を手に入れました。',
   `もう、あなたは「${FINAL_TITLE}」。`,

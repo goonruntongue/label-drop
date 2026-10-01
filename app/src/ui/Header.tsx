@@ -1,7 +1,7 @@
 import { useEffect, useState, type ReactNode } from 'react';
 import * as audio from '../audio';
 import { PROBLEMS, TIER_LABELS, type Tier } from '../data/problems';
-import { MAX_LEVEL, STARS_TO_LEVEL_UP, titleFor } from '../game/levels';
+import { LEGEND_TITLE, MAX_LEVEL, STARS_TO_LEVEL_UP, titleFor } from '../game/levels';
 import { clampBlockCount, MAX_BLOCKS, MIN_BLOCKS, SAVE_SLOT_COUNT, useGame, type Mode } from '../state/store';
 import { THEME_IDS, type ThemeId } from '../theme/themes';
 import { DeviceButton } from './DevicePanel';
@@ -104,7 +104,7 @@ function LevelMeter() {
       <span className="num hud-level-num">{level}</span>
       <span className="hud-title">{titleFor(level)}</span>
       {clears > 0 && (
-        <span className="hud-crown" title={`IA大賢者の証（クリア${clears}回）`} aria-hidden="true">
+        <span className="hud-crown" title={`${LEGEND_TITLE}の証（クリア${clears}回）`} aria-hidden="true">
           👑{clears > 1 ? <small>×{clears}</small> : null}
         </span>
       )}
