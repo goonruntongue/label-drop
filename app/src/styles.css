@@ -1036,3 +1036,6 @@ body.is-dragging .buddy-figure, .buddy.is-hidden .buddy-figure { pointer-events:
 .label-verdict { margin-left: 6px; padding: 1px 6px; border-radius: 999px; font-size: 11px; font-style: normal; font-weight: 700; white-space: nowrap; }
 .label-verdict.is-match { color: #0b1a10; background: #7cf0b5; }
 .label-verdict.is-close { color: var(--text-1); border: 1px solid #7cf0b5; }
+
+/* Fix 2: keyword that may go in either of two boxes */
+.flex-mark { margin-left: 6px; padding: 0 6px; border-radius: 999px; font-size: 10px; font-weight: 700; color: var(--accent); border: 1px solid color-mix(in srgb, var(--accent) 50%, transparent); white-space: nowrap; }

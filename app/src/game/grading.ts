@@ -1,4 +1,5 @@
 // Local grading (no AI): best one-to-one matching of trays to reference groups, then stars.
+import { alsoRight } from '../data/flexibleItems';
 import { PROBLEMS } from '../data/problems';
 import { labelIssues } from '../hints/labelRules';
 import { matchLabel, type LabelMatch } from './labelMatch';
@@ -14,6 +15,8 @@ export interface GradedItem {
   id: string;
   text: string;
   ok: boolean;
+  /** Fix 2: this keyword honestly fits two boxes; either one counts as right. */
+  flexible: boolean;
   /** Where the reference puts it (tray id matched to its group), when wrong. */
   shouldTrayId: string | null;
 }
@@ -58,8 +61,10 @@ export function grade(input: {
   const problem = PROBLEMS[input.problemIndex];
   const groups = [...new Set(items.map((item) => refGroupOf(item.id)))];
 
-  // count[t][g] = how many of group g are in tray t
-  const count = trays.map((tray) => groups.map((g) => items.filter((item) => assign[item.id] === tray.id && refGroupOf(item.id) === g).length));
+  // An item is right in group g when g is its model group, or one of its "either box" groups (fix 2).
+  const rightIn = (item: Item, g: number) => refGroupOf(item.id) === g || alsoRight(problem.id, item.text).includes(problem.groups[g].label);
+  // count[t][j] = how many items in tray t would be right if tray t were group j
+  const count = trays.map((tray) => groups.map((g) => items.filter((item) => assign[item.id] === tray.id && rightIn(item, g)).length));
   // Try every assignment of groups to trays (≤ 5! = 120) and keep the best.
   const slots = trays.map((_, i) => i);
   let best: number[] = [];
@@ -89,8 +94,9 @@ export function grade(input: {
       items: items
         .filter((item) => assign[item.id] === tray.id)
         .map((item) => {
-          const ok = refGroupOf(item.id) === g;
-          return { id: item.id, text: item.text, ok, shouldTrayId: ok ? null : (trayOfGroup.get(refGroupOf(item.id)) ?? null) };
+          const ok = g !== undefined && rightIn(item, g);
+          const flexible = alsoRight(problem.id, item.text).length > 0;
+          return { id: item.id, text: item.text, ok, flexible, shouldTrayId: ok ? null : (trayOfGroup.get(refGroupOf(item.id)) ?? null) };
         }),
     };
   });

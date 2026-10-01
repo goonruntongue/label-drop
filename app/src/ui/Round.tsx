@@ -264,6 +264,11 @@ export function ResultPanel() {
                             → {TRAY_GLYPHS[should.colorIndex]} {shouldLabel} の箱
                           </em>
                         )}
+                        {it.flexible && (
+                          <small className="flex-mark" title="迷いやすい語なので、どちらの箱に入れても正解です">
+                            ◇ どちらの箱でも正解
+                          </small>
+                        )}
                       </li>
                     );
                   })}
