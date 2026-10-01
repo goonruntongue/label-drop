@@ -7,8 +7,8 @@
 
 - **Label Drop**（practice IA シリーズ）：IA のグルーピングとラベリングを練習する 3D ゲーム。
 - **AI を使わない範囲は、ほぼ完成**（仕様書の P0〜P2 相当）。AI（Cloudflare Workers AI）による出題・評価は未着手で、仕様だけ `docs/SPEC.md` にある（P3 以降）。
-- 最新のアプリの変更: label-drop `5fb14c9`（`main`）。開発版の公開: https://goonruntongue.github.io/label-drop/app/
-- ポータルにも反映済み: knowledge-sorrounding-AI `main` の `615eb03`（label-drop `5fb14c9` 時点）。
+- 最新のアプリの変更: label-drop `7c70760`（`main`）。開発版の公開: https://goonruntongue.github.io/label-drop/app/
+- ポータルにも反映済み: knowledge-sorrounding-AI `main` の `c103071`（label-drop `7c70760` 時点）。
   公開: https://goonruntongue.github.io/knowledge-sorrounding-AI/about-ia/app/dist/
 
 ## 2. 守ること（ユーザーとの取り決め）
@@ -38,7 +38,7 @@
 - スマホ（幅900px以下）で盤面を下にスクロールすると、キャラが「答え合わせ」ボタンの右上へ移り、その先では画面右上に残る（同じ大きさ）。2026-10-02 に追加。
 - 仕様書 5.5 の P2 完成条件との突き合わせは 2026-10-02 に実施。足りなかったもの（タッチ44px、ダイアログのフォーカス、設定パネル＝文字サイズ・モーション・色覚サポート、シェーダの事前コンパイル、キーボードの案内、ヘッダーの折り返し）を入れ、仕様書（5.5、5.6、4.1、決定事項 #19・#20）を実態に合わせた。**P2 完了。**
 - 経過時間は**記録も表示もしない**ことに決定（2026-10-02、決定事項 #7 を更新）。
-- その後は P3（Worker＋D1、認証の切り替え、AI ENERGY メーター）へ。
+- その後は P3（Worker＋D1、認証の切り替え、AI ENERGY メーター）へ。**Cloudflare は従量課金が自動で発生しないこと**（Workers Free のまま、超過はエラーになるものだけ。SPEC 8.1 の決定）。
 
 ## 5. 開発のコツ
 

@@ -795,6 +795,13 @@ interface Evaluation {
 
 > **結論**: 課金が心配なら **Workers Free プランのままにしておけば、構造的に課金は発生しない**。メーターは課金を防ぐためではなく、「エラーになる前に上手に節約へ切り替える」UXのために使う。
 
+> **決定（2026-10-02）: 従量課金が自動で発生しないようにする。**
+> - アカウントは **Workers Free プランのまま** にする。Workers Paid への切り替え、有料のアドオン（Queues、Logpush など）の有効化はしない。
+> - 使うのは、無料枠を超えたときに **課金ではなくエラーになる** ものだけ（Workers、D1、Workers AI、Rate Limiting、Cron）。
+> - Cloudflare Access（Zero Trust）は、有効化のときに支払い方法の登録を求められることがあるため、`AUTH_MODE=access` に切り替えるときに改めて確認する（当面は `none`）。
+> - アプリ側でも、1日の上限（`ai_budget.cap`）で二重に止める。
+> - このアカウントには別のアプリの Worker もあり、Workers AI の 10,000 Neurons/日 を共有する（8.1 の注意）。
+
 ### 8.2 計測
 
 ```ts
