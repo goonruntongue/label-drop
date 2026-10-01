@@ -44,7 +44,10 @@
   - Worker の更新は `npm --prefix worker run deploy`（テストを通してから）。D1 のスキーマを変えたら `npx wrangler d1 migrations apply DB --remote`。
 - テンプレ30問を D1 に入れ、`POST /api/problem` を公開した（答えは返さない。テスト12件）。テンプレを変えたら `npm --prefix worker run seed:remote`。
 - **P3 完了（2026-10-02）**。ゲームはまだ内蔵テンプレで遊ぶ（API からの出題への切り替えは P4〜P5）。
-- 次は P4（AI 出題: 生成パイプライン、検証、プール、Cron の作り置き、レート制限）。Workers AI の無料枠はアカウントの他の Worker と共有。**Cloudflare は従量課金が自動で発生しないこと**（Workers Free のまま、超過はエラーになるものだけ。SPEC 8.1 の決定）。
+- **P4（進行中）**: `worker/src/ai/`（生成・検証・品質チェック・予算）、`src/cron.ts`（作り置き）、`POST /api/generate`。テスト30件（偽の AI）。本番に Workers AI binding つきでデプロイ済み。
+  - 本物で3問試した（1問 約33 Neurons、約20秒）。「車のトランク」は合格、SaaS とゲームの2問は品質チェックで不合格（status=rejected）。
+  - **Cron（作り置き）は止めてある**（`wrangler.jsonc` の `triggers.crons` が空）。ユーザーが品質を確認したら `["*/30 * * * *"]` にしてデプロイする。
+  - ゲーム側はまだ AI の問題を出さない（答え合わせに答えが要るため。P5 でサーバー側の答え合わせを作るときに切り替える）。**Cloudflare は従量課金が自動で発生しないこと**（Workers Free のまま、超過はエラーになるものだけ。SPEC 8.1 の決定）。
 
 ## 5. 開発のコツ
 

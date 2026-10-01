@@ -20,7 +20,7 @@ export interface Env {
   CALIBRATION: string;
   /** "1": answer from a fixture instead of calling Workers AI (local development). */
   AI_MOCK?: string;
-  /** Share of keywords that must sit closest to their own group in the embedding check (SPEC 7.2 ④). */
+  /** Share of keywords that must sit closest to their own group (leave-one-out) in the embedding check (SPEC 7.2 ④). */
   QA_MIN_COHESION?: string;
   /** Secret salt for anonymous ids (`wrangler secret put ANON_SALT`); a fixed fallback is used when unset. */
   ANON_SALT?: string;

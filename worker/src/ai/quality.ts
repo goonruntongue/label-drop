@@ -15,23 +15,24 @@ export interface QualityResult {
   duplicates: [number, number][];
 }
 
-/** `vectors[i]` belongs to group `groupOf[i]`. */
+/** `vectors[i]` belongs to group `groupOf[i]`. A keyword is compared with its own group's centroid
+ *  computed without it (leave-one-out), so it can't pull the centroid toward itself. */
 export function quality(vectors: number[][], groupOf: number[]): QualityResult {
   const units = vectors.map(unit);
+  const dims = units[0]?.length ?? 0;
   const groups = [...new Set(groupOf)];
-  const centroids = new Map(
-    groups.map((g) => {
-      const members = units.filter((_, i) => groupOf[i] === g);
-      const sum = members.reduce((acc, v) => acc.map((x, k) => x + v[k]), new Array(units[0]?.length ?? 0).fill(0) as number[]);
-      return [g, unit(sum)] as const;
-    }),
-  );
+  const sums = new Map(groups.map((g) => [g, new Array(dims).fill(0) as number[]]));
+  units.forEach((v, i) => {
+    const sum = sums.get(groupOf[i])!;
+    v.forEach((x, k) => (sum[k] += x));
+  });
   let home = 0;
   units.forEach((v, i) => {
     let best = groupOf[i];
     let bestSim = -Infinity;
-    for (const [g, c] of centroids) {
-      const s = dot(v, c);
+    for (const [g, sum] of sums) {
+      const centroid = unit(g === groupOf[i] ? sum.map((x, k) => x - v[k]) : sum);
+      const s = dot(v, centroid);
       if (s > bestSim) [best, bestSim] = [g, s];
     }
     if (best === groupOf[i]) home++;

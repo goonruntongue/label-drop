@@ -13,6 +13,15 @@ const RATES: Record<string, { in: number; out: number }> = {
 };
 const UNKNOWN_RATE = { in: 50000, out: 150000 };
 
+/**
+ * Per-model request options. Gemma 4 "thinks" first by default: on a 4096-token budget it spent
+ * everything on reasoning and returned no JSON (2026-10-02, ~135 Neurons wasted per call). With
+ * thinking off and JSON mode it answers in ~20 s for ~31 Neurons.
+ */
+const MODEL_OPTIONS: Record<string, Record<string, unknown>> = {
+  '@cf/google/gemma-4-26b-a4b-it': { chat_template_kwargs: { enable_thinking: false }, response_format: { type: 'json_object' } },
+};
+
 export function neuronsFor(env: Env, model: string, tokensIn: number, tokensOut: number): number {
   const r = RATES[model] ?? UNKNOWN_RATE;
   const calibration = Number(env.CALIBRATION) || 1.15;
@@ -59,16 +68,18 @@ export async function chat(env: Env, model: string, messages: ChatMessage[], opt
     const text = JSON.stringify(MOCK_GENERATED);
     return { text, tokensIn: Math.ceil(promptChars * 1.1), tokensOut: 0, neurons: 0 };
   }
-  const res = (await runWithRetry(env, model, { messages, temperature: opts.temperature, max_tokens: opts.maxTokens })) as {
+  const res = (await runWithRetry(env, model, { messages, temperature: opts.temperature, max_tokens: opts.maxTokens, ...MODEL_OPTIONS[model] })) as {
     response?: unknown;
     choices?: { message?: { content?: string } }[];
-    usage?: { prompt_tokens?: number; completion_tokens?: number };
+    usage?: { prompt_tokens?: number; completion_tokens?: number; neurons?: number };
   };
   const raw = res.response ?? res.choices?.[0]?.message?.content ?? '';
   const text = typeof raw === 'string' ? raw : JSON.stringify(raw);
   const tokensIn = res.usage?.prompt_tokens ?? Math.ceil(promptChars * 1.1);
   const tokensOut = res.usage?.completion_tokens ?? roughTokens(text);
-  return { text, tokensIn, tokensOut, neurons: neuronsFor(env, model, tokensIn, tokensOut) };
+  // The real cost when the response reports it; the price list otherwise.
+  const neurons = typeof res.usage?.neurons === 'number' ? res.usage.neurons : neuronsFor(env, model, tokensIn, tokensOut);
+  return { text, tokensIn, tokensOut, neurons };
 }
 
 export interface EmbedResult {

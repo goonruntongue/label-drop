@@ -42,7 +42,7 @@ const groupOfText = new Map<string, number>();
 function vectorsFor(texts: string[]): number[][] {
   // Each keyword points at its group's axis, with a small private wobble (cos ≈ 0.89 within a group).
   return texts.map((t, i) => {
-    const g = groupOfText.get(t.replace(/\d+$/, '')) ?? 0;
+    const g = groupOfText.get(t.split('：')[0].replace(/\d+$/, '')) ?? 0;
     const v = new Array(64).fill(0);
     v[g] = 1;
     v[10 + i] = 0.35;
@@ -169,7 +169,7 @@ describe('generateProblem', () => {
   });
 
   it('does not call the AI when the budget has no room', async () => {
-    await base.DB.prepare('INSERT INTO ai_budget (day, cap, used) VALUES (?1, 9000, 8900)').bind(today()).run();
+    await base.DB.prepare('INSERT INTO ai_budget (day, cap, used) VALUES (?1, 9000, 8990)').bind(today()).run(); // less than one reservation left
     const ai = fakeAi([JSON.stringify(variant(4))]);
     expect(await generateProblem(envWith(ai), { tier: 'service', userId: null })).toMatchObject({ ok: false, reason: 'budget' });
     expect(ai.calls).toHaveLength(0);

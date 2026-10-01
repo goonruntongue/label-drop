@@ -67,19 +67,22 @@ export async function generateProblem(env: Env, opts: { tier: Tier; theme?: stri
   }
   if (!problem) return { ok: false, reason: 'invalid' };
 
-  // Embedding check (skipped in mock mode).
+  // Embedding check (skipped in mock mode). Each keyword is embedded with its meaning: a bare 2–6
+  // character word carries too little (2026-10-02: good problems scored 0.57 on words alone, 0.73 with
+  // meanings, while two problems with blurry groups stayed around 0.45).
   const texts = problem.groups.flatMap((g) => g.items.map((k) => k.text));
+  const embedTexts = problem.groups.flatMap((g) => g.items.map((k) => `${k.text}：${k.desc}`));
   const groupOf = problem.groups.flatMap((g, gi) => g.items.map(() => gi));
   let cohesion: number | null = null;
   try {
-    const emb = await embed(env, texts);
+    const emb = await embed(env, embedTexts);
     if (emb) {
       await recordCall(env, { kind: 'embed', model: env.EMBED_MODEL, tokensIn: emb.tokensIn, neurons: emb.neurons, ok: true, userId: opts.userId });
       await settle(env, 0, emb.neurons);
       if (emb.vectors.length === texts.length) {
         const q = quality(emb.vectors, groupOf);
         cohesion = q.cohesion;
-        const min = Number(env.QA_MIN_COHESION) || 0.8;
+        const min = Number(env.QA_MIN_COHESION) || 0.6;
         if (q.duplicates.length) return { ok: false, reason: 'quality', detail: `ほぼ同じキーワード: ${q.duplicates.map(([a, b]) => `${texts[a]}/${texts[b]}`).join(', ')}` };
         if (q.cohesion < min) return { ok: false, reason: 'quality', detail: `まとまり ${Math.round(q.cohesion * 100)}% < ${Math.round(min * 100)}%` };
       }
