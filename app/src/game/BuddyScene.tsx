@@ -14,8 +14,10 @@ const DURATION: Record<Reaction, number> = { nod: 0.4, hop: 0.7, spin: 1.2, sad:
 /** Written by the UI layer, read every frame here. */
 export const buddyCue: { reaction: Reaction | null; at: number } = { reaction: null, at: 0 };
 
-/** Player-controlled turn (drag / swipe): yaw in radians plus flick velocity. */
-export const buddySpin = { yaw: 0, vel: 0, dragging: false, lastTouch: 0 };
+/** Player-controlled turn (drag / swipe): yaw (pan) with flick velocity, and pitch (tilt). */
+export const buddySpin = { yaw: 0, vel: 0, pitch: 0, dragging: false, lastTouch: 0 };
+export const PITCH_MIN = -0.45; // looking up at it
+export const PITCH_MAX = 0.55; // looking down on it
 
 export function cue(reaction: Reaction) {
   buddyCue.reaction = reaction;
@@ -40,6 +42,7 @@ function Figure({ index }: { index: number }) {
     return clone;
   }, [scene]);
   const ref = useRef<THREE.Group>(null);
+  const tiltRef = useRef<THREE.Group>(null);
 
   // The model may finish loading after the "appear" cue: restart it so the pop-in is seen.
   useEffect(() => {
@@ -57,6 +60,7 @@ function Figure({ index }: { index: number }) {
       if (performance.now() - buddySpin.lastTouch > 2500) {
         const front = Math.round(buddySpin.yaw / (Math.PI * 2)) * Math.PI * 2;
         buddySpin.yaw += (front - buddySpin.yaw) * (1 - Math.exp(-2 * dt));
+        buddySpin.pitch += (0 - buddySpin.pitch) * (1 - Math.exp(-2.5 * dt));
       }
     }
     const t = clock.elapsedTime;
@@ -98,12 +102,18 @@ function Figure({ index }: { index: number }) {
 
     g.position.y = y;
     g.rotation.set(rotX, rotY + buddySpin.yaw, rotZ);
+    tiltRef.current?.rotation.set(buddySpin.pitch, 0, 0);
     g.scale.set(scale, scale * scaleY, scale);
   });
 
   return (
-    <group ref={ref}>
-      <primitive object={object} />
+    // Tilt pivots around the body's middle (y=0.5) so the head stays in frame.
+    <group ref={tiltRef} position={[0, 0.5, 0]}>
+      <group position={[0, -0.5, 0]}>
+        <group ref={ref}>
+          <primitive object={object} />
+        </group>
+      </group>
     </group>
   );
 }

@@ -13,13 +13,13 @@ const BuddyScene = lazy(() => import('../game/BuddyScene'));
 const scene = () => import('../game/BuddyScene');
 const react = (r: Reaction) => void scene().then((m) => m.cue(r));
 
-/** Drag / swipe sideways to turn the character; a tap makes it hop. */
+/** Drag / swipe sideways to turn (pan) the character, up/down to tilt it; a tap makes it hop. */
 function useTurn() {
-  const last = useRef({ x: 0, t: 0, moved: 0 });
+  const last = useRef({ x: 0, y: 0, t: 0, moved: 0 });
   const onPointerDown = (e: React.PointerEvent<HTMLDivElement>) => {
     if (document.body.classList.contains('is-dragging')) return;
     e.currentTarget.setPointerCapture(e.pointerId);
-    last.current = { x: e.clientX, t: performance.now(), moved: 0 };
+    last.current = { x: e.clientX, y: e.clientY, t: performance.now(), moved: 0 };
     void scene().then(({ buddySpin }) => {
       buddySpin.dragging = true;
       buddySpin.vel = 0;
@@ -30,10 +30,12 @@ function useTurn() {
     if (!e.currentTarget.hasPointerCapture(e.pointerId)) return;
     const now = performance.now();
     const dx = e.clientX - last.current.x;
+    const dy = e.clientY - last.current.y;
     const dtS = Math.max(0.001, (now - last.current.t) / 1000);
-    last.current = { x: e.clientX, t: now, moved: last.current.moved + Math.abs(dx) };
-    void scene().then(({ buddySpin }) => {
+    last.current = { x: e.clientX, y: e.clientY, t: now, moved: last.current.moved + Math.abs(dx) + Math.abs(dy) };
+    void scene().then(({ buddySpin, PITCH_MIN, PITCH_MAX }) => {
       buddySpin.yaw += dx * 0.014;
+      buddySpin.pitch = Math.min(PITCH_MAX, Math.max(PITCH_MIN, buddySpin.pitch + dy * 0.01));
       buddySpin.vel = (dx * 0.014) / dtS;
       buddySpin.lastTouch = now;
     });
