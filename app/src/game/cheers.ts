@@ -51,3 +51,8 @@ export function cheerFor(result: Grade, levelUpTo: number | null): string | null
   picked.set(result, line);
   return line;
 }
+
+/** The praise line for reaching a level (used by the debug preview). */
+export function levelUpCheer(level: number): string | null {
+  return LEVEL_UP[level] ?? null;
+}

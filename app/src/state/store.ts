@@ -87,6 +87,8 @@ interface Progress {
   /** Lifetime stats in level mode, shown on the clear screen. */
   totalStars: number;
   rounds: number;
+  /** Highest level ever reached: unlocks characters in the gallery (kept after the final clear's return to Lv1). */
+  bestLevel: number;
 }
 
 const CLEARS_KEY = 'practice-ia:clears';
@@ -125,7 +127,7 @@ function loadSaveSlots(): Array<SaveSlot | null> {
 const loadTuning = () => load<Tuning>(TUNING_KEY, DEFAULT_TUNING, (raw) => ({ ...DEFAULT_TUNING, ...(JSON.parse(raw) as Partial<Tuning>) }));
 const loadTheme = () => load<ThemeId>(THEME_KEY, 'midnight-blue', (raw) => (raw in THEMES ? (raw as ThemeId) : undefined));
 const loadProgress = () =>
-  load<Progress>(PROGRESS_KEY, { mode: 'level', level: 1, levelStars: 0, totalStars: 0, rounds: 0 }, (raw) => {
+  load<Progress>(PROGRESS_KEY, { mode: 'level', level: 1, levelStars: 0, totalStars: 0, rounds: 0, bestLevel: 1 }, (raw) => {
     const p = JSON.parse(raw) as Partial<Progress>;
     return {
       mode: p.mode === 'free' ? 'free' : 'level',
@@ -133,6 +135,7 @@ const loadProgress = () =>
       levelStars: Math.max(0, Number(p.levelStars) || 0),
       totalStars: Math.max(0, Number(p.totalStars) || 0),
       rounds: Math.max(0, Number(p.rounds) || 0),
+      bestLevel: Math.min(MAX_LEVEL, Math.max(1, Number(p.bestLevel) || 1, Number(p.level) || 1)),
     };
   });
 
@@ -258,6 +261,21 @@ export interface GameState {
   clears: Clears;
   /** Bumped on every answer check (not on loading a save), so effects play only for fresh results. */
   submitSeq: number;
+  /** Highest level ever reached (character gallery unlocks). */
+  bestLevel: number;
+  /** Character gallery ("魔法使い図鑑"): open + the character shown (0..9 = Lv1..10, 10 = legend). */
+  galleryOpen: boolean;
+  galleryIndex: number;
+  openGallery(index?: number): void;
+  closeGallery(): void;
+  /** Level-up reveal of the new character (0-based index), shown after the LEVEL UP banner. */
+  reveal: { index: number; preview: boolean } | null;
+  showReveal(index: number, preview?: boolean): void;
+  closeReveal(): void;
+  /** Debug: play the level-up show for any level without touching progress. */
+  previewSeq: number;
+  previewLevel: number;
+  debugPreviewLevelUp(level: number): void;
   /** The clear celebration is on screen. */
   celebrating: boolean;
   /** After the celebration: back to Lv1 with a fresh board (the badge stays). */
@@ -303,7 +321,9 @@ const initialSaveSlots = loadSaveSlots();
 export const useGame = create<GameState>()((set, get) => {
   const saveProgress = () => {
     const { mode, level, levelStars, totalStars, rounds } = get();
-    save(PROGRESS_KEY, JSON.stringify({ mode, level, levelStars, totalStars, rounds }));
+    const bestLevel = Math.max(get().bestLevel, level);
+    if (bestLevel !== get().bestLevel) set({ bestLevel });
+    save(PROGRESS_KEY, JSON.stringify({ mode, level, levelStars, totalStars, rounds, bestLevel }));
   };
   const saveClears = () => save(CLEARS_KEY, JSON.stringify(get().clears));
 
@@ -322,6 +342,23 @@ export const useGame = create<GameState>()((set, get) => {
     clears: loadClears(),
     submitSeq: 0,
     celebrating: false,
+    galleryOpen: false,
+    galleryIndex: 0,
+    reveal: null,
+    previewSeq: 0,
+    previewLevel: 2,
+
+    openGallery: (index) => {
+      const s = get();
+      set({ galleryOpen: true, galleryIndex: index ?? (s.clears.count > 0 ? MAX_LEVEL : s.level - 1) });
+    },
+    closeGallery: () => set({ galleryOpen: false }),
+    showReveal: (index, preview = false) => set({ reveal: { index, preview } }),
+    closeReveal: () => {
+      const s = get();
+      set({ reveal: null, resultOpen: !s.reveal?.preview && !!s.result ? true : s.resultOpen });
+    },
+    debugPreviewLevelUp: (level) => set({ previewSeq: get().previewSeq + 1, previewLevel: Math.min(MAX_LEVEL, Math.max(2, level)) }),
 
     finishCelebration: () => {
       set({ celebrating: false, level: 1, levelStars: 0 });
@@ -410,7 +447,7 @@ export const useGame = create<GameState>()((set, get) => {
     openBriefing: () => set({ briefingOpen: true }),
     resetProgress: () => {
       // Full reset (decided 2026-10-01): level, stars, stats and the 👑 badge.
-      set({ level: 1, levelStars: 0, totalStars: 0, rounds: 0, clears: { count: 0, lastAt: null }, celebrating: false });
+      set({ level: 1, levelStars: 0, totalStars: 0, rounds: 0, bestLevel: 1, clears: { count: 0, lastAt: null }, celebrating: false });
       saveProgress();
       saveClears();
       get().newRound();

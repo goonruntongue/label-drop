@@ -206,6 +206,10 @@ export function Header() {
         </span>
       </div>
       <div className="hud-actions">
+        <button type="button" className="btn btn-gallery" title="魔法使い図鑑（キャラクター）" onClick={() => useGame.getState().openGallery()}>
+          <span aria-hidden="true">📖</span>
+          図鑑
+        </button>
         <DeviceButton />
         <button
           type="button"

@@ -2,10 +2,12 @@
 // then the title appears and the closing message is typed out slowly, like a typewriter.
 import { lazy, Suspense, useEffect, useState } from 'react';
 import * as audio from '../audio';
+import { LEGEND_INDEX } from '../game/characters';
 import { LEGEND_TITLE } from '../game/levels';
 import { useGame } from '../state/store';
 
 const CelebrationScene = lazy(() => import('../game/CelebrationScene'));
+const CharacterViewer = lazy(() => import('../game/CharacterViewer'));
 
 const reducedMotion = typeof matchMedia !== 'undefined' && matchMedia('(prefers-reduced-motion: reduce)').matches;
 const FINAL_TITLE = LEGEND_TITLE;
@@ -122,8 +124,10 @@ function CelebrationBody() {
         {phase !== 'intro' && (
           <>
             <p className="celebration-title">CONGRATULATIONS!!</p>
-            <div className="medal" aria-hidden="true">
-              <span className="medal-face">👑</span>
+            <div className="celebration-character" onClick={(e) => e.stopPropagation()}>
+              <Suspense fallback={null}>
+                <CharacterViewer index={LEGEND_INDEX} className="char-canvas" />
+              </Suspense>
             </div>
             <p className="celebration-rank">
               称号「<b>{FINAL_TITLE}</b>」を手に入れました

@@ -1,11 +1,11 @@
 // Small celebrations after an answer check (smaller than the final clear):
 //   clear   (★1+)     → glittering confetti burst + "CLEAR!" / "PERFECT!" + one-line praise
-//   levelup           → party poppers + cheers + "LEVEL UP!" with the new title
+//   levelup           → party poppers + cheers + "LEVEL UP!" with the new title, then the new character
 // The result panel is held back until the banner has played, then opens under the falling confetti.
 // Result sounds (stars, fanfare) are played here for every answer check.
 import { lazy, Suspense, useEffect, useState } from 'react';
 import * as audio from '../audio';
-import { cheerFor } from '../game/cheers';
+import { cheerFor, levelUpCheer } from '../game/cheers';
 import type { CelebrationVariant } from '../game/CelebrationScene';
 import { titleFor } from '../game/levels';
 import { useGame } from '../state/store';
@@ -46,9 +46,27 @@ export function RoundEffects() {
       }
       if (!variant) return;
       useGame.setState({ resultOpen: false });
+      const levelUpTo = s.levelUpTo;
       window.setTimeout(() => {
-        if (useGame.getState().result === result) useGame.getState().openResult();
+        const now = useGame.getState();
+        if (now.result !== result) return;
+        // A level up reveals the new character first; closing it opens the result.
+        if (levelUpTo) now.showReveal(levelUpTo - 1);
+        else now.openResult();
       }, HOLD[variant]);
+    });
+  }, []);
+
+  // Debug preview (?debug): the same level-up show for any level, without touching progress.
+  useEffect(() => {
+    let id = 1000;
+    return useGame.subscribe((s, prev) => {
+      if (s.previewSeq === prev.previewSeq) return;
+      const level = s.previewLevel;
+      audio.stars(3);
+      window.setTimeout(() => audio.fanfare(), 700);
+      setShow({ id: ++id, variant: 'levelup', heading: 'LEVEL UP!', sub: `LV ${level} ・ ${titleFor(level)}`, cheer: levelUpCheer(level) });
+      window.setTimeout(() => useGame.getState().showReveal(level - 1, true), HOLD.levelup);
     });
   }, []);
 

@@ -13,8 +13,9 @@ export function DebugPanel() {
   const [open, setOpen] = useState(true);
   const [pickLevel, setPickLevel] = useState(level);
   const [pickStars, setPickStars] = useState(0);
+  const [previewLevel, setPreviewLevel] = useState(2);
   if (!enabled) return null;
-  const { debugSetProgress, debugCelebrate, debugClearBadge } = useGame.getState();
+  const { debugSetProgress, debugCelebrate, debugClearBadge, debugPreviewLevelUp, openGallery } = useGame.getState();
 
   if (!open) {
     return (
@@ -57,6 +58,22 @@ export function DebugPanel() {
       </label>
       <button type="button" className="btn" onClick={() => debugSetProgress(pickLevel, pickStars)}>
         このレベルにする
+      </button>
+      <label>
+        レベルアップ演出
+        <select value={previewLevel} onChange={(e) => setPreviewLevel(Number(e.target.value))}>
+          {Array.from({ length: MAX_LEVEL - 1 }, (_, i) => (
+            <option key={i} value={i + 2}>
+              LV{i + 1}→LV{i + 2} {TITLES[i + 1]}
+            </option>
+          ))}
+        </select>
+      </label>
+      <button type="button" className="btn" onClick={() => debugPreviewLevelUp(previewLevel)}>
+        レベルアップ演出をプレビュー
+      </button>
+      <button type="button" className="btn" onClick={() => openGallery()}>
+        図鑑を開く
       </button>
       <button type="button" className="btn" onClick={debugCelebrate}>
         クリア演出を再生（👑+1）
