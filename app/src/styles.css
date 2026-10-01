@@ -1029,3 +1029,5 @@ body.is-dragging .buddy-figure, .buddy.is-hidden .buddy-figure { pointer-events:
 .btn-danger { color: #ff8a8a; border-color: color-mix(in srgb, #ff6b6b 55%, transparent); white-space: nowrap; }
 .btn-danger:hover:enabled { background: rgba(255, 107, 107, 0.14); border-color: #ff6b6b; }
 :is([data-theme="pastel-rainbow"], [data-theme="kraft-paper"]) .btn-danger { color: #b3261e; }
+
+.loading-note { font-size: 12px; color: var(--text-2); }

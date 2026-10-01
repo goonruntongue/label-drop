@@ -93,6 +93,7 @@ export default function App() {
             <div className="loading" role="status">
               <span className="kicker">LOADING KEYWORDS</span>
               <span className="loading-bar" />
+              <small className="loading-note">キーワードの文字を準備しています…</small>
             </div>
           )}
           <Buddy />

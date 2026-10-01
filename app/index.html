@@ -20,9 +20,35 @@
       rel="stylesheet"
       href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@500;700&family=Noto+Sans+JP:wght@400;500;700;900&family=Space+Grotesk:wght@500;700&display=swap"
     />
+    <!-- Splash: visible from the first paint until React mounts (it replaces #root's content). -->
+    <style>
+      html, body { margin: 0; background: #050c1c; }
+      html[data-theme='pastel-rainbow'], html[data-theme='pastel-rainbow'] body { background: #e9e4f0; }
+      html[data-theme='kraft-paper'], html[data-theme='kraft-paper'] body { background: #e4d8c4; }
+      .splash { position: fixed; inset: 0; display: grid; place-content: center; justify-items: center; gap: 14px; color: #f3f8ff; font: 700 14px/1.5 system-ui, 'Hiragino Sans', 'Yu Gothic UI', sans-serif; }
+      html:not([data-theme='midnight-blue']):is([data-theme]) .splash { color: #2d2640; }
+      .splash img { width: 72px; height: 72px; border-radius: 18px; box-shadow: 0 10px 30px rgba(0, 0, 0, 0.35); animation: splash-bob 1.6s ease-in-out infinite; }
+      .splash b { font-size: 22px; letter-spacing: -0.01em; }
+      .splash b span { color: #45e5ff; }
+      .splash small { font-weight: 500; opacity: 0.7; }
+      .splash i { width: 160px; height: 3px; border-radius: 3px; background: linear-gradient(90deg, transparent, #45e5ff, transparent) 0 0 / 50% 100% no-repeat; animation: splash-scan 1.2s ease-in-out infinite; }
+      @keyframes splash-scan { from { background-position: -100% 0; } to { background-position: 200% 0; } }
+      @keyframes splash-bob { 50% { transform: translateY(-6px); } }
+      @media (prefers-reduced-motion: reduce) { .splash img, .splash i { animation: none; } }
+    </style>
+    <script>
+      try { var t = localStorage.getItem('practice-ia:theme'); if (t) document.documentElement.dataset.theme = t; } catch (e) {}
+    </script>
   </head>
   <body>
-    <div id="root"></div>
+    <div id="root">
+      <div class="splash" role="status">
+        <img src="./icons/icon-192.png" alt="" />
+        <b>Label <span>Drop</span></b>
+        <i></i>
+        <small>練習アプリを準備しています…</small>
+      </div>
+    </div>
     <script type="module" src="/src/main.tsx"></script>
   </body>
 </html>
