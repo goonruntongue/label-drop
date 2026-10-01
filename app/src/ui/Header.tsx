@@ -96,6 +96,37 @@ function BlockCountField() {
  * portal (/about-ia/app/dist/ → /about-ia/index.html), so decide from where the app is served.
  */
 const LP_HREF = typeof location !== 'undefined' && /\/dist\/(index\.html)?$/.test(location.pathname) ? '../../index.html' : '../index.html';
+// A query parameter can remain on an installed app's start URL.  The referrer is
+// the reliable signal that this browser tab was actually opened from the IA guide.
+const OPENED_FROM_IA = typeof document !== 'undefined' && (() => {
+  try {
+    const referrer = new URL(document.referrer);
+    return referrer.origin === location.origin && /\/about-ia\/(index\.html)?$/.test(referrer.pathname);
+  } catch {
+    return false;
+  }
+})();
+
+function AppIdentity() {
+  const goBack = () => {
+    try {
+      const referrer = new URL(document.referrer);
+      const cameFromGuide = referrer.origin === location.origin && /\/about-ia\/(index\.html)?$/.test(referrer.pathname);
+      if (cameFromGuide && history.length > 1) {
+        history.back();
+        return;
+      }
+    } catch {
+      // A direct visit has no usable referrer: use the safe guide fallback below.
+    }
+    location.assign(LP_HREF);
+  };
+
+  if (OPENED_FROM_IA) {
+    return <button type="button" className="brand brand-back" onClick={goBack}>← 前に戻る</button>;
+  }
+  return <span className="brand" aria-label="Label Drop">Label <b>Drop</b></span>;
+}
 
 /** The current character's face (rendered once from its 3D model); null until it exists. */
 function Face({ className }: { className: string }) {
@@ -238,9 +269,7 @@ export function Header() {
   return (
     <header className="hud">
       <div className="hud-brand">
-        <a className="brand" href={LP_HREF} title="情報アーキテクチャの紹介ページへ戻る">
-          Label <b>Drop</b>
-        </a>
+        <AppIdentity />
         <span className="badge">P1 · 練習版</span>
       </div>
       <label className="hud-field">

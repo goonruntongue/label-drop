@@ -82,6 +82,8 @@ button, input, select { font: inherit; color: inherit; }
 .hud-brand { display: flex; align-items: center; gap: 12px; }
 .brand { font-family: var(--font-display); font-size: 20px; font-weight: 700; letter-spacing: -0.02em; color: var(--text-1); text-decoration: none; }
 .brand b { color: var(--accent); }
+.brand-back { padding: 0; border: 0; background: transparent; cursor: pointer; }
+.brand-back:hover { color: var(--accent); }
 .badge {
   font-family: var(--font-display);
   font-size: 10px;
