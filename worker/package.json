@@ -1,0 +1,21 @@
+{
+  "name": "label-drop-api",
+  "private": true,
+  "version": "0.0.1",
+  "type": "module",
+  "scripts": {
+    "dev": "wrangler dev",
+    "db:local": "wrangler d1 migrations apply DB --local",
+    "typecheck": "tsc --noEmit",
+    "test": "wrangler d1 migrations apply DB --local --persist-to .wrangler/test-state && vitest run"
+  },
+  "dependencies": {
+    "hono": "^4.13.12"
+  },
+  "devDependencies": {
+    "@cloudflare/workers-types": "^5.20261001.1",
+    "typescript": "^7.0.2",
+    "vitest": "^5.0.3",
+    "wrangler": "^4.146.0"
+  }
+}

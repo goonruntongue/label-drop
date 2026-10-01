@@ -1,0 +1,36 @@
+// Label Drop API (SPEC 9). API only: the game itself is served as static files from the portal
+// (Cloudflare Pages / GitHub Pages) and calls this Worker cross-origin (ALLOWED_ORIGINS).
+// Free plan only (SPEC 8.1): everything here fails with an error past the free tier, never bills.
+{
+  "$schema": "node_modules/wrangler/config-schema.json",
+  "name": "label-drop-api",
+  "main": "src/index.ts",
+  "compatibility_date": "2026-09-30",
+  "workers_dev": true,
+  "d1_databases": [
+    {
+      "binding": "DB",
+      "database_name": "label-drop",
+      // Placeholder until the database is created on Cloudflare (`wrangler d1 create label-drop`).
+      // Local development and tests use a local SQLite copy and don't need the real id.
+      "database_id": "00000000-0000-0000-0000-000000000000",
+      "migrations_dir": "migrations"
+    }
+  ],
+  "access": {
+    // wrangler dev: pretend Cloudflare Access let this user in (only used when AUTH_MODE=access)
+    "dev": { "aud": "label-drop-dev", "identity": { "email": "dev@example.com", "name": "Dev" } }
+  },
+  "vars": {
+    "AUTH_MODE": "none",
+    "ALLOWED_ORIGINS": "https://knowledge-surrounding-ai.pages.dev,https://goonruntongue.github.io",
+    "ALLOW_LOCALHOST": "1",
+    // ADMIN_EMAILS and ANON_SALT are secrets (`wrangler secret put …`), not committed here.
+    "DAILY_CAP": "9000",
+    "QUOTA_EVAL_PER_DAY": "15",
+    "QUOTA_GEN_PER_DAY": "3",
+    // Rough Neurons per call, for "about N more" in the meter (calibrated once AI calls exist, P4/P5).
+    "EST_GEN_NEURONS": "220",
+    "EST_EVAL_NEURONS": "90"
+  }
+}
