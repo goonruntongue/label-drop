@@ -84,7 +84,24 @@ interface Progress {
   mode: Mode;
   level: number;
   levelStars: number;
+  /** Lifetime stats in level mode, shown on the clear screen. */
+  totalStars: number;
+  rounds: number;
 }
+
+const CLEARS_KEY = 'practice-ia:clears';
+
+/** Times the Lv10 final exam was cleared (the 👑 badge). Removed together with a progress reset. */
+export interface Clears {
+  count: number;
+  lastAt: string | null;
+}
+
+const loadClears = () =>
+  load<Clears>(CLEARS_KEY, { count: 0, lastAt: null }, (raw) => {
+    const c = JSON.parse(raw) as Partial<Clears>;
+    return { count: Math.max(0, Number(c.count) || 0), lastAt: typeof c.lastAt === 'string' ? c.lastAt : null };
+  });
 
 export interface SaveSnapshot {
   mode: Mode; level: number; levelStars: number; problemIndex: number;
@@ -108,12 +125,14 @@ function loadSaveSlots(): Array<SaveSlot | null> {
 const loadTuning = () => load<Tuning>(TUNING_KEY, DEFAULT_TUNING, (raw) => ({ ...DEFAULT_TUNING, ...(JSON.parse(raw) as Partial<Tuning>) }));
 const loadTheme = () => load<ThemeId>(THEME_KEY, 'midnight-blue', (raw) => (raw in THEMES ? (raw as ThemeId) : undefined));
 const loadProgress = () =>
-  load<Progress>(PROGRESS_KEY, { mode: 'level', level: 1, levelStars: 0 }, (raw) => {
+  load<Progress>(PROGRESS_KEY, { mode: 'level', level: 1, levelStars: 0, totalStars: 0, rounds: 0 }, (raw) => {
     const p = JSON.parse(raw) as Partial<Progress>;
     return {
       mode: p.mode === 'free' ? 'free' : 'level',
       level: Math.min(MAX_LEVEL, Math.max(1, Number(p.level) || 1)),
       levelStars: Math.max(0, Number(p.levelStars) || 0),
+      totalStars: Math.max(0, Number(p.totalStars) || 0),
+      rounds: Math.max(0, Number(p.rounds) || 0),
     };
   });
 
@@ -232,6 +251,19 @@ export interface GameState {
   briefingOpen: boolean;
   /** Keyword whose meaning is being shown (hover / long-press). */
   peek: { id: string; x: number; y: number } | null;
+  /** Lifetime level-mode stats (shown on the clear screen). */
+  totalStars: number;
+  rounds: number;
+  /** 👑 badge: how many times the Lv10 final exam was cleared. */
+  clears: Clears;
+  /** The clear celebration is on screen. */
+  celebrating: boolean;
+  /** After the celebration: back to Lv1 with a fresh board (the badge stays). */
+  finishCelebration(): void;
+  /** Debug (?debug): jump to a level / star count, replay the celebration, remove the badge. */
+  debugSetProgress(level: number, levelStars: number): void;
+  debugCelebrate(): void;
+  debugClearBadge(): void;
 
   setMode(mode: Mode): void;
   newRound(): void;
@@ -268,9 +300,10 @@ const initialSaveSlots = loadSaveSlots();
 
 export const useGame = create<GameState>()((set, get) => {
   const saveProgress = () => {
-    const { mode, level, levelStars } = get();
-    save(PROGRESS_KEY, JSON.stringify({ mode, level, levelStars }));
+    const { mode, level, levelStars, totalStars, rounds } = get();
+    save(PROGRESS_KEY, JSON.stringify({ mode, level, levelStars, totalStars, rounds }));
   };
+  const saveClears = () => save(CLEARS_KEY, JSON.stringify(get().clears));
 
   return {
     ...initialProgress,
@@ -284,6 +317,27 @@ export const useGame = create<GameState>()((set, get) => {
     hintOpen: false,
     peek: null,
     saveSlots: initialSaveSlots,
+    clears: loadClears(),
+    celebrating: false,
+
+    finishCelebration: () => {
+      set({ celebrating: false, level: 1, levelStars: 0 });
+      saveProgress();
+      get().newRound();
+    },
+    debugSetProgress: (level, levelStars) => {
+      set({ mode: 'level', level: Math.min(MAX_LEVEL, Math.max(1, level)), levelStars: Math.max(0, Math.min(STARS_TO_LEVEL_UP - 1, levelStars)) });
+      saveProgress();
+      get().newRound();
+    },
+    debugCelebrate: () => {
+      set({ celebrating: true, clears: { count: get().clears.count + 1, lastAt: new Date().toISOString() } });
+      saveClears();
+    },
+    debugClearBadge: () => {
+      set({ clears: { count: 0, lastAt: null } });
+      saveClears();
+    },
 
     setMode: (mode) => {
       const { level, problemIndex, blockCount } = get();
@@ -309,18 +363,41 @@ export const useGame = create<GameState>()((set, get) => {
         axisHintShown: s.axisHintShown,
         assistUsed: s.assistUsed,
       });
-      let { level, levelStars } = s;
+      let { level, levelStars, totalStars, rounds, clears } = s;
       let levelUpTo: number | null = null;
-      if (s.mode === 'level' && level < MAX_LEVEL) {
+      let celebrating = false;
+      if (s.mode === 'level') {
+        rounds += 1;
+        totalStars += g.stars;
         levelStars += g.stars;
         if (levelStars >= STARS_TO_LEVEL_UP) {
-          level += 1;
-          levelStars = 0;
-          levelUpTo = level;
+          if (level < MAX_LEVEL) {
+            level += 1;
+            levelStars = 0;
+            levelUpTo = level;
+          } else {
+            // Lv10 final exam passed: celebrate and award the 👑 badge.
+            levelStars = STARS_TO_LEVEL_UP;
+            celebrating = true;
+            clears = { count: clears.count + 1, lastAt: new Date().toISOString() };
+          }
         }
       }
-      set({ result: g, resultOpen: true, level, levelStars, levelUpTo, selected: null, hintOpen: false });
+      set({
+        result: g,
+        resultOpen: !celebrating,
+        level,
+        levelStars,
+        levelUpTo,
+        totalStars,
+        rounds,
+        clears,
+        celebrating,
+        selected: null,
+        hintOpen: false,
+      });
       saveProgress();
+      if (celebrating) saveClears();
     },
 
     closeResult: () => set({ resultOpen: false }),
@@ -328,8 +405,10 @@ export const useGame = create<GameState>()((set, get) => {
     dismissBriefing: () => set({ briefingOpen: false }),
     openBriefing: () => set({ briefingOpen: true }),
     resetProgress: () => {
-      set({ level: 1, levelStars: 0 });
+      // Full reset (decided 2026-10-01): level, stars, stats and the 👑 badge.
+      set({ level: 1, levelStars: 0, totalStars: 0, rounds: 0, clears: { count: 0, lastAt: null }, celebrating: false });
       saveProgress();
+      saveClears();
       get().newRound();
     },
     setPeek: (peek) => {

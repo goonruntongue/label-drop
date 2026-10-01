@@ -1,7 +1,7 @@
 import { useEffect, useState, type ReactNode } from 'react';
 import * as audio from '../audio';
 import { PROBLEMS, TIER_LABELS, type Tier } from '../data/problems';
-import { MAX_LEVEL, STARS_TO_LEVEL_UP } from '../game/levels';
+import { MAX_LEVEL, STARS_TO_LEVEL_UP, titleFor } from '../game/levels';
 import { clampBlockCount, MAX_BLOCKS, MIN_BLOCKS, SAVE_SLOT_COUNT, useGame, type Mode } from '../state/store';
 import { THEME_IDS, type ThemeId } from '../theme/themes';
 import { DeviceButton } from './DevicePanel';
@@ -92,24 +92,29 @@ function BlockCountField() {
 function LevelMeter() {
   const level = useGame((s) => s.level);
   const levelStars = useGame((s) => s.levelStars);
-  const max = level >= MAX_LEVEL;
+  const clears = useGame((s) => s.clears.count);
+  const final = level >= MAX_LEVEL;
   return (
     <div
       className="hud-level"
-      title={max ? 'マスターレベルです' : `★を${STARS_TO_LEVEL_UP}個ためるとレベルアップ`}
-      aria-label={`レベル${level}、星${levelStars}/${STARS_TO_LEVEL_UP}`}
+      title={final ? `最終試験：★を${STARS_TO_LEVEL_UP}個集めるとクリア` : `★を${STARS_TO_LEVEL_UP}個ためるとレベルアップ`}
+      aria-label={`レベル${level}、称号 ${titleFor(level)}、星${levelStars}/${STARS_TO_LEVEL_UP}${clears ? `、クリア${clears}回` : ''}`}
     >
       <span className="kicker">LV</span>
       <span className="num hud-level-num">{level}</span>
-      {!max && (
-        <span className="hud-level-stars" aria-hidden="true">
-          {Array.from({ length: STARS_TO_LEVEL_UP }, (_, i) => (
-            <i key={i} className={i < levelStars ? 'on' : undefined}>
-              ★
-            </i>
-          ))}
+      <span className="hud-title">{titleFor(level)}</span>
+      {clears > 0 && (
+        <span className="hud-crown" title={`IA大賢者の証（クリア${clears}回）`} aria-hidden="true">
+          👑{clears > 1 ? <small>×{clears}</small> : null}
         </span>
       )}
+      <span className="hud-level-stars" aria-hidden="true">
+        {Array.from({ length: STARS_TO_LEVEL_UP }, (_, i) => (
+          <i key={i} className={i < levelStars ? 'on' : undefined}>
+            ★
+          </i>
+        ))}
+      </span>
     </div>
   );
 }

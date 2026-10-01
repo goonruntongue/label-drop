@@ -30,8 +30,29 @@ export const LEVELS: LevelDef[] = [
   { level: 7, title: 'ばらばらの4箱', sizes: [5, 4, 3, 3], showCapacity: true, labelsRequired: true, goal: '15個を、大きさの違う4つの箱に分けよう' },
   { level: 8, title: '定員なし', sizes: null, total: 18, trays: 4, showCapacity: false, labelsRequired: true, goal: '箱の定員は隠れています。18個を4つの箱に分けよう' },
   { level: 9, title: '5つの箱', sizes: null, total: 24, trays: 5, showCapacity: false, labelsRequired: true, goal: '24個を5つの箱に。中身の数は自分で見極めよう' },
-  { level: 10, title: 'マスター', sizes: null, total: null, showCapacity: false, labelsRequired: true, goal: '数も大きさもランダム。本番と同じ条件です' },
+  { level: 10, title: '最終試験', sizes: null, total: null, showCapacity: false, labelsRequired: true, goal: '最終試験。数も大きさもランダムです。★を5つ集めればクリア！' },
 ];
+
+/**
+ * Titles (二つ名) per level, one consistent lineage: apprentice mage → mage → sorcerer → magus → sage → grand sage.
+ * Reaching Lv10 makes you a candidate; clearing the Lv10 final exam earns the 👑 badge.
+ */
+export const TITLES = [
+  'IA見習い魔法使い',
+  '仕分けの魔法使い',
+  '名付けの魔法使い',
+  '整理の魔術師',
+  '分類の魔術師',
+  '構造の魔導士',
+  'ラベルの魔導士',
+  '情報の賢者見習い',
+  '情報設計の賢者',
+  'IA大賢者',
+] as const;
+
+export function titleFor(level: number): string {
+  return TITLES[Math.min(MAX_LEVEL, Math.max(1, level)) - 1];
+}
 
 export function levelDef(level: number): LevelDef {
   return LEVELS[Math.min(MAX_LEVEL, Math.max(1, level)) - 1];

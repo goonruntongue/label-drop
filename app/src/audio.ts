@@ -118,6 +118,130 @@ export function fanfare() {
   [523.25, 659.25, 783.99, 1046.5].forEach((f, i) => tone(f, i === 3 ? 0.7 : 0.22, 'triangle', 0.09, i * 0.11));
 }
 
+/** Party popper: a sharp noise crack plus a short paper rustle. */
+export function popper(delay = 0) {
+  const a = audio();
+  if (!a) return;
+  const t0 = a.ctx.currentTime + delay;
+  const src = a.ctx.createBufferSource();
+  src.buffer = noiseBuffer(a.ctx);
+  const hp = a.ctx.createBiquadFilter();
+  hp.type = 'highpass';
+  hp.frequency.value = 900;
+  const env = a.ctx.createGain();
+  env.gain.setValueAtTime(0.0001, t0);
+  env.gain.exponentialRampToValueAtTime(0.5, t0 + 0.004);
+  env.gain.exponentialRampToValueAtTime(0.06, t0 + 0.06);
+  env.gain.exponentialRampToValueAtTime(0.0001, t0 + 0.45);
+  src.connect(hp).connect(env).connect(a.out);
+  src.start(t0, Math.random() * 0.2);
+  src.stop(t0 + 0.5);
+
+  // The "boom" body of the pop.
+  const boom = a.ctx.createOscillator();
+  boom.type = 'sine';
+  boom.frequency.setValueAtTime(140, t0);
+  boom.frequency.exponentialRampToValueAtTime(45, t0 + 0.18);
+  const benv = a.ctx.createGain();
+  benv.gain.setValueAtTime(0.0001, t0);
+  benv.gain.exponentialRampToValueAtTime(0.45, t0 + 0.004);
+  benv.gain.exponentialRampToValueAtTime(0.0001, t0 + 0.22);
+  boom.connect(benv).connect(a.out);
+  boom.start(t0);
+  boom.stop(t0 + 0.25);
+}
+
+/** One whistle glide ("ヒュー"): rises, wobbles, falls back a little. */
+function whistle(a: { ctx: AudioContext; out: GainNode }, t0: number, f0: number, dur: number, level: number) {
+  const osc = a.ctx.createOscillator();
+  osc.type = 'sine';
+  osc.frequency.setValueAtTime(f0, t0);
+  osc.frequency.linearRampToValueAtTime(f0 * 1.45, t0 + dur * 0.6);
+  osc.frequency.linearRampToValueAtTime(f0 * 1.25, t0 + dur);
+  const vib = a.ctx.createOscillator();
+  vib.frequency.value = 7 + Math.random() * 3;
+  const vibAmt = a.ctx.createGain();
+  vibAmt.gain.value = f0 * 0.02;
+  vib.connect(vibAmt).connect(osc.frequency);
+  const env = a.ctx.createGain();
+  env.gain.setValueAtTime(0.0001, t0);
+  env.gain.exponentialRampToValueAtTime(level, t0 + 0.05);
+  env.gain.setValueAtTime(level, t0 + dur * 0.7);
+  env.gain.exponentialRampToValueAtTime(0.0001, t0 + dur);
+  osc.connect(env).connect(a.out);
+  osc.start(t0);
+  vib.start(t0);
+  osc.stop(t0 + dur + 0.02);
+  vib.stop(t0 + dur + 0.02);
+}
+
+/** Cheers: a few people whistling "ヒューヒュー" over a soft crowd swell. */
+export function cheer(delay = 0) {
+  const a = audio();
+  if (!a) return;
+  const t0 = a.ctx.currentTime + delay;
+  for (let p = 0; p < 3; p++) {
+    const f0 = 1500 + Math.random() * 600;
+    const start = t0 + p * 0.22 + Math.random() * 0.1;
+    whistle(a, start, f0, 0.32, 0.035);
+    whistle(a, start + 0.42, f0 * 1.03, 0.4, 0.035);
+  }
+  const src = a.ctx.createBufferSource();
+  src.buffer = noiseBuffer(a.ctx);
+  src.loop = true;
+  const band = a.ctx.createBiquadFilter();
+  band.type = 'bandpass';
+  band.frequency.value = 700;
+  band.Q.value = 0.6;
+  const env = a.ctx.createGain();
+  env.gain.setValueAtTime(0.0001, t0);
+  env.gain.exponentialRampToValueAtTime(0.05, t0 + 0.35);
+  env.gain.exponentialRampToValueAtTime(0.0001, t0 + 2.6);
+  src.connect(band).connect(env).connect(a.out);
+  src.start(t0);
+  src.stop(t0 + 2.7);
+}
+
+/** Applause "パチパチ": many short hand-clap bursts, dense at first and thinning out. */
+export function applause(delay = 0, dur = 3.6) {
+  const a = audio();
+  if (!a) return;
+  const t0 = a.ctx.currentTime + delay;
+  const buf = noiseBuffer(a.ctx);
+  let t = 0;
+  while (t < dur) {
+    const fade = 1 - t / dur;
+    const at = t0 + t;
+    const src = a.ctx.createBufferSource();
+    src.buffer = buf;
+    const band = a.ctx.createBiquadFilter();
+    band.type = 'bandpass';
+    band.frequency.value = 900 + Math.random() * 1800;
+    band.Q.value = 1.4;
+    const env = a.ctx.createGain();
+    const peak = (0.05 + Math.random() * 0.09) * (0.25 + 0.75 * fade);
+    env.gain.setValueAtTime(0.0001, at);
+    env.gain.exponentialRampToValueAtTime(peak, at + 0.002);
+    env.gain.exponentialRampToValueAtTime(0.0001, at + 0.03 + Math.random() * 0.02);
+    src.connect(band).connect(env).connect(a.out);
+    src.start(at, Math.random() * 0.4);
+    src.stop(at + 0.06);
+    t += (0.012 + Math.random() * 0.03) / (0.35 + 0.65 * fade);
+  }
+}
+
+/** Typewriter: a quiet, low key strike. */
+export const typeKey = () => tone(520 + Math.random() * 40, 0.05, 'sine', 0.03, 0, 380);
+
+/** Clear: a bright rising run and a held major chord. */
+export function grandFanfare(delay = 0) {
+  const run = [523.25, 659.25, 783.99, 1046.5, 1318.5];
+  run.forEach((f, i) => tone(f, 0.22, 'triangle', 0.08, delay + i * 0.09));
+  const at = delay + run.length * 0.09 + 0.05;
+  [523.25, 659.25, 783.99, 1046.5].forEach((f) => tone(f, 1.6, 'triangle', 0.06, at));
+  tone(2093, 1.2, 'sine', 0.025, at + 0.05);
+}
+
 /** "Koto": a block set down inside the tray, with a small settle bounce. No musical pitch. */
 export function clack() {
   const a = audio();

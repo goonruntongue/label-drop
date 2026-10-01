@@ -2,7 +2,7 @@
 import { useEffect, useState, type CSSProperties } from 'react';
 import * as audio from '../audio';
 import { PROBLEMS } from '../data/problems';
-import { levelDef, MAX_LEVEL, STARS_TO_LEVEL_UP } from '../game/levels';
+import { levelDef, MAX_LEVEL, STARS_TO_LEVEL_UP, titleFor } from '../game/levels';
 import { TRAY_GLYPHS, useGame } from '../state/store';
 import { THEMES } from '../theme/themes';
 
@@ -40,7 +40,7 @@ export function BriefingOverlay() {
       <div className="briefing-card">
         {mode === 'level' ? (
           <p className="kicker">
-            LEVEL {level} ・ {def.title}
+            LEVEL {level} ・ {def.title} ・ {titleFor(level)}
           </p>
         ) : (
           <p className="kicker">FREE PLAY</p>
@@ -216,15 +216,18 @@ export function ResultPanel() {
               <p>
                 <b>LV {levelUpTo}</b> ・ {levelDef(levelUpTo).title}
               </p>
+              <p className="level-up-rank">
+                称号アップ！ {titleFor(levelUpTo - 1)} → <b>{titleFor(levelUpTo)}</b>
+              </p>
               <p className="level-up-goal">{levelDef(levelUpTo).goal}</p>
             </div>
           ) : (
             <div className="level-progress">
               <span>
                 LV {level}
-                {level >= MAX_LEVEL ? '（マスター）' : ''}
+                {level >= MAX_LEVEL ? '（最終試験）' : ''}
               </span>
-              {level < MAX_LEVEL && (
+              {(
                 <>
                   <span className="level-bar" aria-hidden="true">
                     <i style={{ width: `${(levelStars / STARS_TO_LEVEL_UP) * 100}%` }} />

@@ -11,6 +11,8 @@ import { HintPanel } from './ui/HintPanel';
 import { Inventory } from './ui/Inventory';
 import { TuningPanel } from './ui/Overlays';
 import { BriefCard, BriefingOverlay, KeywordTip, ResultPanel } from './ui/Round';
+import { Celebration } from './ui/Celebration';
+import { DebugPanel } from './ui/DebugPanel';
 
 // Block textures are baked once, so every glyph subset must be loaded before the stage mounts.
 async function preloadFonts() {
@@ -105,6 +107,8 @@ export default function App() {
         }}
       />
       <KeywordTip />
+      <Celebration />
+      <DebugPanel />
       <div className="sr-only" aria-live="polite">
         {announcement}
       </div>
