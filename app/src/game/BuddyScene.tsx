@@ -95,9 +95,12 @@ function Figure({ index }: { index: number }) {
   );
 }
 
+/** The camera is aimed at the body's middle (y=0.6), not R3F's default origin (the feet), so tall
+ *  hats and hops stay inside the frame. */
 export default function BuddyScene({ index }: { index: number }) {
   return (
-    <Canvas dpr={[1, 2]} camera={{ position: [0, 0.72, 3.4], fov: 30 }} gl={{ alpha: true, antialias: true }} style={{ pointerEvents: 'none' }}>
+    <Canvas dpr={[1, 2]} camera={{ position: [0, 0.6, 3.4], fov: 30 }}
+      onCreated={({ camera }) => camera.lookAt(0, 0.6, 0)} gl={{ alpha: true, antialias: true }} style={{ pointerEvents: 'none' }}>
       <ambientLight intensity={1.4} />
       <directionalLight position={[2, 4, 3]} intensity={2.2} />
       <directionalLight position={[-3, 2, -2]} intensity={1} color="#8fd8ff" />

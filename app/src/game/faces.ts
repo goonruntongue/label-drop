@@ -4,7 +4,7 @@
 import { useSyncExternalStore } from 'react';
 import * as THREE from 'three';
 
-const KEY = 'practice-ia:face:v1:';
+const KEY = 'practice-ia:face:v2:'; // v2: framing raised so tall hats aren't clipped
 const W = 160;
 const H = 96;
 
@@ -53,7 +53,7 @@ export function ensureFace(index: number, scene: THREE.Object3D) {
       // Models are 1 unit tall, feet at y=0; frame the heads (top ~55%), 5:3.
       const halfW = 0.5;
       const halfH = (halfW * H) / W;
-      const cy = 0.98 - halfH;
+      const cy = 1.03 - halfH;
       const cam = new THREE.OrthographicCamera(-halfW, halfW, cy + halfH, cy - halfH, 0.1, 10);
       cam.position.set(0, 0, 3);
       renderer.render(s, cam);
