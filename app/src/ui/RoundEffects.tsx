@@ -12,9 +12,10 @@ import { useGame } from '../state/store';
 import { SafeBoundary } from './SafeBoundary';
 
 const CelebrationScene = lazy(() => import('../game/CelebrationScene'));
-const DURATION: Record<'clear' | 'levelup', number> = { clear: 2600, levelup: 4200 };
+// Level up lingers (~5.5s) so the poppers, the banner and the falling confetti can be enjoyed.
+const DURATION: Record<'clear' | 'levelup', number> = { clear: 2600, levelup: 7000 };
 /** When the result panel opens (the banner is gone by then). */
-const HOLD: Record<'clear' | 'levelup', number> = { clear: 1500, levelup: 3100 };
+const HOLD: Record<'clear' | 'levelup', number> = { clear: 1500, levelup: 5600 };
 
 interface Show {
   id: number;

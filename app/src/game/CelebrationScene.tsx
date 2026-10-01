@@ -30,7 +30,7 @@ interface VariantConfig {
 
 const VARIANTS: Record<CelebrationVariant, VariantConfig> = {
   clear: { poppers: false, popAt: [0.05, 0.12], burst: 80, sparks: 20, speed: 1.15, spread: 0.55, rain: 0, twinkle: false, kick: 0, transparent: true, sound: 'sparkle' },
-  levelup: { poppers: true, popAt: [0.55, 0.66], burst: 200, sparks: 40, speed: 0.9, spread: 0.45, rain: 0, twinkle: false, kick: 0.6, transparent: true, sound: 'cheer' },
+  levelup: { poppers: true, popAt: [0.55, 0.66], burst: 200, sparks: 40, speed: 0.9, spread: 0.45, rain: 9, twinkle: false, kick: 0.6, transparent: true, sound: 'cheer' },
   final: { poppers: true, popAt: [1.0, 1.14], burst: 340, sparks: 60, speed: 1, spread: 0.42, rain: 26, twinkle: true, kick: 1, transparent: false, sound: 'grand' },
 };
 const GRAVITY = 6.5;

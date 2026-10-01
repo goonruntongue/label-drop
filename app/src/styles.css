@@ -852,8 +852,8 @@ button, input, select { font: inherit; color: inherit; }
 .result-cheer { margin: 4px 0 10px; font-size: 15px; font-weight: 700; color: var(--text-1); }
 .result-cheer::before { content: "💬 "; }
 .round-fx { position: fixed; inset: 0; z-index: 90; pointer-events: none; }
-.round-fx.is-levelup::before { content: ""; position: absolute; inset: 0; background: radial-gradient(ellipse at 50% 40%, rgba(255, 200, 60, 0.2), rgba(0, 0, 0, 0.4)); animation: fx-fade 3100ms ease both; }
-@keyframes fx-fade { 0% { opacity: 0; } 8%, 80% { opacity: 1; } 100% { opacity: 0; } }
+.round-fx.is-levelup::before { content: ""; position: absolute; inset: 0; background: radial-gradient(ellipse at 50% 40%, rgba(255, 200, 60, 0.2), rgba(0, 0, 0, 0.4)); animation: fx-fade 5600ms ease both; }
+@keyframes fx-fade { 0% { opacity: 0; } 5%, 88% { opacity: 1; } 100% { opacity: 0; } }
 .round-fx-banner {
   position: absolute; left: 50%; top: 34%;
   width: min(520px, calc(100% - 32px));
@@ -878,12 +878,19 @@ button, input, select { font: inherit; color: inherit; }
   background-image: linear-gradient(100deg, #b8860b 0%, #ffd54a 30%, #fff6c8 45%, #ffd54a 60%, #b8860b 100%);
   background-size: 250% 100%;
   filter: drop-shadow(0 0 16px rgba(255, 200, 60, 0.6));
-  animation: fx-stamp 2650ms 450ms cubic-bezier(.2, 1.6, .4, 1) both, gold-shine 2.4s linear infinite;
+  animation: fx-stamp-long 5150ms 450ms cubic-bezier(.2, 1.6, .4, 1) both, gold-shine 2.4s linear infinite;
 }
 @keyframes fx-stamp {
   0% { opacity: 0; transform: scale(1.8); }
   14% { opacity: 1; transform: scale(1); }
   80% { opacity: 1; transform: scale(1); }
+  100% { opacity: 0; transform: scale(0.96) translateY(-8px); }
+}
+/* Level up: the same stamp, held longer (the bounce-in keeps its speed). */
+@keyframes fx-stamp-long {
+  0% { opacity: 0; transform: scale(1.8); }
+  7% { opacity: 1; transform: scale(1); }
+  90% { opacity: 1; transform: scale(1); }
   100% { opacity: 0; transform: scale(0.96) translateY(-8px); }
 }
 .round-fx-sub, .round-fx-cheer {
@@ -895,13 +902,18 @@ button, input, select { font: inherit; color: inherit; }
   color: #fff;
   font-weight: 700;
 }
-.round-fx-sub { font-size: 16px; color: #ffd54a; animation: fx-pop 2350ms 750ms ease both; }
+.round-fx-sub { font-size: 16px; color: #ffd54a; animation: fx-pop-long 4850ms 750ms ease both; }
 .round-fx-cheer { display: block; width: fit-content; margin: 8px auto 0; font-size: 14px; }
 .is-clear .round-fx-cheer { animation: fx-pop 1250ms 250ms ease both; }
-.is-levelup .round-fx-cheer { animation: fx-pop 2100ms 1000ms ease both; }
+.is-levelup .round-fx-cheer { animation: fx-pop-long 4600ms 1000ms ease both; }
 @keyframes fx-pop {
   0% { opacity: 0; transform: translateY(8px); }
   12%, 82% { opacity: 1; transform: none; }
+  100% { opacity: 0; }
+}
+@keyframes fx-pop-long {
+  0% { opacity: 0; transform: translateY(8px); }
+  6%, 91% { opacity: 1; transform: none; }
   100% { opacity: 0; }
 }
 :root:not([data-motion="full"]) .round-fx * { animation-duration: 1ms !important; animation-delay: 0ms !important; }
