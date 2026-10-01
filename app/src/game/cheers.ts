@@ -1,10 +1,12 @@
 // One-line praise shown on a clear / level up. Picked once per result so the banner and the
 // result panel always show the same line.
+// The same lines are used for every topic (stores, chores, websites, ...), so keep them free of
+// topic-specific words such as 売り場 or 棚.
 import type { Grade } from './grading';
 
 const BY_STARS: Record<1 | 2 | 3, string[]> = {
   3: [
-    '完璧な仕分け！ 迷う人がいない売り場です。',
+    '完璧な仕分け！ これなら探す人が迷いません。',
     'どの言葉も、ちょうどいい居場所に収まりました。',
     '見る人の目線で分けられています。お見事！',
     'ラベルを見ただけで中身がわかる。理想の形です。',
