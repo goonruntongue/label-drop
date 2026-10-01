@@ -1,21 +1,76 @@
-// Tiny synthesized sound set (no assets). The context is created lazily on the first gesture.
+// Tiny synthesized sound set (no assets).
+//
+// Unlocking: browsers only let audio start inside a user gesture, and iOS (Safari / home-screen app)
+// only inside a tap's touchend or click — not on pointerdown / touchstart. The first sound of a game
+// is usually the pick-up on pointerdown, so a context created there stayed suspended and the app was
+// silent until some later tap. So every gesture (including touchend / click) tries to unlock the
+// context until it runs, and again whenever the app comes back to the foreground (iOS can leave it
+// suspended or "interrupted" after a switch).
 import { useGame } from './state/store';
 
 let ctx: AudioContext | null = null;
 let master: GainNode | null = null;
 let noise: AudioBuffer | null = null;
 
-function audio(): { ctx: AudioContext; out: GainNode } | null {
-  if (useGame.getState().muted) return null;
+function context(): AudioContext | null {
   if (!ctx) {
     if (typeof AudioContext === 'undefined') return null;
     ctx = new AudioContext();
     master = ctx.createGain();
     master.gain.value = 0.5;
     master.connect(ctx.destination);
+    ctx.onstatechange = () => (ctx?.state === 'running' ? disarm() : arm());
   }
-  if (ctx.state === 'suspended') void ctx.resume();
-  return master ? { ctx, out: master } : null;
+  return ctx;
+}
+
+const GESTURES = ['pointerdown', 'touchend', 'click', 'keydown'] as const;
+let armed = false;
+
+function unlock() {
+  const c = context();
+  if (!c) return;
+  if (c.state === 'running') {
+    disarm();
+    return;
+  }
+  void c.resume().catch(() => undefined);
+  // Starting a (silent) source inside the gesture is what actually unlocks iOS.
+  const blip = c.createBufferSource();
+  blip.buffer = c.createBuffer(1, 1, c.sampleRate);
+  blip.connect(c.destination);
+  blip.start(0);
+}
+
+function arm() {
+  if (armed || typeof window === 'undefined') return;
+  armed = true;
+  for (const type of GESTURES) window.addEventListener(type, unlock, { capture: true, passive: true });
+}
+function disarm() {
+  if (!armed) return;
+  armed = false;
+  for (const type of GESTURES) window.removeEventListener(type, unlock, { capture: true });
+}
+
+if (typeof document !== 'undefined') {
+  arm();
+  document.addEventListener('visibilitychange', () => {
+    if (document.hidden || !ctx || ctx.state === 'running') return;
+    void ctx.resume().catch(() => undefined);
+    arm();
+  });
+}
+
+/** For checks from the console / debug panel. */
+export const audioState = () => ctx?.state ?? 'none';
+
+function audio(): { ctx: AudioContext; out: GainNode } | null {
+  if (useGame.getState().muted) return null;
+  const c = context();
+  if (!c) return null;
+  if (c.state !== 'running') void c.resume().catch(() => undefined); // suspended or iOS "interrupted"
+  return master ? { ctx: c, out: master } : null;
 }
 
 function tone(freq: number, dur: number, type: OscillatorType, gain: number, delay = 0, slideTo?: number) {
