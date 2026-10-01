@@ -278,6 +278,10 @@ export interface GameState {
   reveal: { index: number; preview: boolean } | null;
   showReveal(index: number, preview?: boolean): void;
   closeReveal(): void;
+  /** Fix 7: animated how-to-play; opens by itself on the very first visit. */
+  tutorialOpen: boolean;
+  openTutorial(): void;
+  closeTutorial(): void;
   /** Debug: play the level-up show for any level without touching progress. */
   previewSeq: number;
   previewLevel: number;
@@ -352,6 +356,9 @@ export const useGame = create<GameState>()((set, get) => {
     celebrating: false,
     galleryOpen: false,
     galleryIndex: 0,
+    tutorialOpen: !load<boolean>('practice-ia:tutorial-seen', false, () => true),
+    openTutorial: () => set({ tutorialOpen: true }),
+    closeTutorial: () => set({ tutorialOpen: false }),
     reveal: null,
     previewSeq: 0,
     previewLevel: 2,

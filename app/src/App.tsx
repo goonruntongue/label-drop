@@ -16,6 +16,7 @@ import { DebugPanel } from './ui/DebugPanel';
 import { RoundEffects } from './ui/RoundEffects';
 import { Buddy } from './ui/Buddy';
 import { CharacterGallery, CharacterReveal } from './ui/Characters';
+import { Tutorial } from './ui/Tutorial';
 
 // Block textures are baked once, so every glyph subset must be loaded before the stage mounts.
 async function preloadFonts() {
@@ -116,6 +117,7 @@ export default function App() {
       <RoundEffects />
       <CharacterReveal />
       <CharacterGallery />
+      <Tutorial />
       <Celebration />
       <DebugPanel />
       <div className="sr-only" aria-live="polite">

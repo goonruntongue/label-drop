@@ -1039,3 +1039,103 @@ body.is-dragging .buddy-figure, .buddy.is-hidden .buddy-figure { pointer-events:
 
 /* Fix 2: keyword that may go in either of two boxes */
 .flex-mark { margin-left: 6px; padding: 0 6px; border-radius: 999px; font-size: 10px; font-weight: 700; color: var(--accent); border: 1px solid color-mix(in srgb, var(--accent) 50%, transparent); white-space: nowrap; }
+
+/* ---------- Fix 7: animated tutorial ---------- */
+.tut-modal { position: fixed; inset: 0; z-index: 97; display: grid; place-items: center; padding: 16px; background: rgba(3, 6, 18, 0.7); backdrop-filter: blur(4px); }
+.tut-card { width: min(420px, 100%); padding: 16px 18px 18px; border-radius: 20px; background: var(--surface-raised, #0e1530); border: 1px solid var(--line); color: var(--text-1); text-align: center; box-shadow: 0 20px 60px rgba(0, 0, 0, 0.45); animation: fade-up 350ms ease-out both; }
+.tut-head { display: flex; justify-content: space-between; align-items: center; }
+.tut-head .num { margin-left: 6px; color: var(--text-2); }
+.tut-card h2 { margin: 10px 0 4px; font-size: 18px; }
+.tut-text { margin: 0; font-size: 13px; line-height: 1.7; color: var(--text-2); min-height: 3.4em; }
+.tut-dots { display: flex; justify-content: center; gap: 6px; margin: 12px 0; }
+.tut-dots i { width: 7px; height: 7px; border-radius: 50%; background: var(--line); }
+.tut-dots i.on { background: var(--accent); }
+.tut-actions { display: flex; gap: 8px; }
+.tut-actions .btn { flex: 1; justify-content: center; padding: 10px; }
+
+/* The little stage: 300x190, everything placed in px so the motion paths are exact. */
+.tut-scene { position: relative; width: 300px; height: 190px; margin: 10px auto 0; border-radius: 14px; overflow: hidden; background: radial-gradient(ellipse at 50% 30%, color-mix(in srgb, var(--accent) 16%, transparent), transparent 70%), color-mix(in srgb, var(--bg-0) 70%, transparent); border: 1px solid var(--line); }
+.tut-trays { position: absolute; inset: 0; }
+.tut-tray { position: absolute; top: 118px; width: 110px; height: 58px; border-radius: 10px; border: 2px solid #45e5ff; background: rgba(69, 229, 255, 0.08); box-sizing: border-box; }
+.tut-tray.is-a { left: 30px; }
+.tut-tray.is-b { left: 160px; border-color: #ffbf36; background: rgba(255, 191, 54, 0.08); }
+.tut-label { position: absolute; left: 6px; right: 6px; top: -24px; height: 20px; border-radius: 6px; background: rgba(5, 12, 28, 0.85); border: 1px solid var(--line); color: #fff; font-size: 12px; font-weight: 700; line-height: 18px; }
+.tut-mini { position: absolute; left: 8px; top: 8px; padding: 2px 6px; border-radius: 4px; background: #3d6bd8; color: #fff; font-size: 10px; font-style: normal; font-weight: 700; }
+.tut-mini.is-2 { top: 30px; }
+.tut-block { position: absolute; left: 112px; top: 30px; width: 76px; height: 30px; border-radius: 6px; background: linear-gradient(#5a8cff, #3d6bd8); color: #fff; font-size: 13px; font-weight: 900; line-height: 30px; box-shadow: 0 4px 10px rgba(0, 0, 0, 0.35); }
+.tut-hand { position: absolute; left: 160px; top: 52px; font-size: 26px; filter: drop-shadow(0 2px 3px rgba(0, 0, 0, 0.5)); }
+
+/* 1: grab and throw into box A (center 85,147) */
+.is-throw .tut-block { animation: tut-throw-block 3.2s ease-in-out infinite; }
+.is-throw .tut-hand { animation: tut-throw-hand 3.2s ease-in-out infinite; }
+@keyframes tut-throw-block {
+  0%, 22% { transform: none; opacity: 1; }
+  30% { transform: translate(0, -8px) scale(1.06); }
+  42% { transform: translate(-40px, -26px) rotate(-12deg) scale(1.04); }
+  58% { transform: translate(-65px, 98px) rotate(8deg) scale(0.82); }
+  64% { transform: translate(-65px, 104px) rotate(0) scale(0.8); }
+  86% { transform: translate(-65px, 104px) scale(0.8); opacity: 1; }
+  95%, 100% { transform: translate(-65px, 104px) scale(0.8); opacity: 0; }
+}
+@keyframes tut-throw-hand {
+  0% { transform: translate(60px, 60px); opacity: 0; }
+  12% { opacity: 1; }
+  22% { transform: none; }
+  30% { transform: translate(0, -8px); }
+  42% { transform: translate(-40px, -26px); }
+  48% { transform: translate(-55px, 10px); opacity: 1; }
+  70%, 100% { transform: translate(-60px, 30px); opacity: 0; }
+}
+
+/* 2: tap the block, then tap box B (center 215,147) */
+.is-tap .tut-block { animation: tut-tap-block 3.4s ease-in-out infinite; }
+.is-tap .tut-hand { animation: tut-tap-hand 3.4s ease-in-out infinite; }
+.is-tap .tut-tray.is-b { animation: tut-tap-tray 3.4s ease-in-out infinite; }
+@keyframes tut-tap-block {
+  0%, 18% { transform: none; box-shadow: 0 4px 10px rgba(0, 0, 0, 0.35); }
+  22%, 55% { transform: translateY(-4px); box-shadow: 0 0 0 3px #45e5ff, 0 0 18px #45e5ff; }
+  72% { transform: translate(65px, 104px) scale(0.8); box-shadow: none; }
+  88% { transform: translate(65px, 104px) scale(0.8); opacity: 1; }
+  96%, 100% { transform: translate(65px, 104px) scale(0.8); opacity: 0; }
+}
+@keyframes tut-tap-hand {
+  0% { transform: translate(40px, 50px); opacity: 0; }
+  10% { opacity: 1; }
+  16% { transform: none; }
+  20% { transform: scale(0.85); }
+  24% { transform: none; }
+  44% { transform: translate(50px, 90px); }
+  48% { transform: translate(50px, 90px) scale(0.85); }
+  52% { transform: translate(50px, 90px); opacity: 1; }
+  70%, 100% { transform: translate(70px, 120px); opacity: 0; }
+}
+@keyframes tut-tap-tray {
+  0%, 46% { box-shadow: none; }
+  50%, 60% { box-shadow: 0 0 0 3px #ffbf36, 0 0 16px #ffbf36; }
+  70%, 100% { box-shadow: none; }
+}
+
+/* 3: type a label */
+.tut-typing { display: inline-block; overflow: hidden; white-space: nowrap; vertical-align: top; animation: tut-type 3s steps(2, end) infinite; }
+@keyframes tut-type { 0%, 15% { width: 0; } 45%, 90% { width: 2em; } 100% { width: 0; } }
+.is-name .tut-tray.is-a .tut-label { border-color: #45e5ff; box-shadow: 0 0 10px rgba(69, 229, 255, 0.5); }
+.tut-caret { position: absolute; left: 106px; top: 97px; width: 2px; height: 16px; background: #45e5ff; animation: caret 900ms steps(1) infinite; }
+
+/* 4: answer check -> stars */
+.tut-button { position: absolute; left: 90px; top: 34px; width: 120px; height: 32px; border-radius: 10px; background: var(--accent); color: var(--bg-0); font-size: 13px; font-weight: 700; line-height: 32px; animation: tut-press 3.4s ease-in-out infinite; }
+.tut-hand.is-check { left: 170px; top: 50px; animation: tut-check-hand 3.4s ease-in-out infinite; }
+.tut-stars { position: absolute; left: 0; right: 0; top: 74px; display: flex; justify-content: center; gap: 6px; font-size: 26px; color: #ffbf36; text-shadow: 0 0 12px rgba(255, 191, 54, 0.7); }
+.tut-stars span { opacity: 0; animation: tut-star 3.4s ease-out infinite; }
+.tut-stars span:nth-child(2) { animation-delay: 0.15s; }
+.tut-stars span:nth-child(3) { animation-delay: 0.3s; }
+.is-check .tut-tray { animation: tut-ok 3.4s ease-in-out infinite; }
+@keyframes tut-press { 0%, 22% { transform: none; } 26% { transform: scale(0.94); } 30%, 100% { transform: none; } }
+@keyframes tut-check-hand { 0% { transform: translate(40px, 40px); opacity: 0; } 12% { opacity: 1; } 22% { transform: none; } 26% { transform: scale(0.85); } 32% { transform: none; opacity: 1; } 50%, 100% { transform: translate(30px, 40px); opacity: 0; } }
+@keyframes tut-star { 0%, 30% { opacity: 0; transform: scale(0.2); } 38% { opacity: 1; transform: scale(1.35); } 46%, 88% { opacity: 1; transform: scale(1); } 100% { opacity: 0; transform: scale(1); } }
+@keyframes tut-ok { 0%, 30% { box-shadow: none; } 38%, 85% { box-shadow: 0 0 0 3px #7cf0b5, 0 0 14px #7cf0b5; } 100% { box-shadow: none; } }
+
+@media (prefers-reduced-motion: reduce) {
+  .tut-scene * { animation: none !important; }
+  .tut-stars span { opacity: 1; }
+}
+.tut-head .btn-mini { width: auto; padding: 4px 10px; white-space: nowrap; writing-mode: horizontal-tb; }

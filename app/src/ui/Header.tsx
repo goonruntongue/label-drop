@@ -287,6 +287,9 @@ export function Header() {
           <span aria-hidden="true">📖</span>
           図鑑
         </button>
+        <button type="button" className="btn" title="遊び方（アニメーションで説明）" onClick={() => useGame.getState().openTutorial()}>
+          ？ 遊び方
+        </button>
         <DeviceButton />
         <button
           type="button"
