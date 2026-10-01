@@ -5,6 +5,7 @@ import * as audio from '../audio';
 import { LEGEND_INDEX } from '../game/characters';
 import { LEGEND_TITLE } from '../game/levels';
 import { useGame } from '../state/store';
+import { SafeBoundary } from './SafeBoundary';
 
 const CelebrationScene = lazy(() => import('../game/CelebrationScene'));
 const CharacterViewer = lazy(() => import('../game/CharacterViewer'));
@@ -116,18 +117,22 @@ function CelebrationBody() {
   return (
     <div className={`celebration is-${phase}`} role="dialog" aria-modal="true" aria-label="クリアおめでとう">
       {!reducedMotion && (
-        <Suspense fallback={null}>
-          <CelebrationScene />
-        </Suspense>
+        <SafeBoundary>
+          <Suspense fallback={null}>
+            <CelebrationScene />
+          </Suspense>
+        </SafeBoundary>
       )}
       <div className="celebration-card" onClick={finished ? undefined : skipAll}>
         {phase !== 'intro' && (
           <>
             <p className="celebration-title">CONGRATULATIONS!!</p>
             <div className="celebration-character" onClick={(e) => e.stopPropagation()}>
-              <Suspense fallback={null}>
-                <CharacterViewer index={LEGEND_INDEX} className="char-canvas" />
-              </Suspense>
+              <SafeBoundary>
+                <Suspense fallback={null}>
+                  <CharacterViewer index={LEGEND_INDEX} className="char-canvas" />
+                </Suspense>
+              </SafeBoundary>
             </div>
             <p className="celebration-rank">
               称号「<b>{FINAL_TITLE}</b>」を手に入れました

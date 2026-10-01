@@ -4,15 +4,18 @@ import { lazy, Suspense, useEffect } from 'react';
 import { CHARACTER_COUNT, characterLabel, characterTitle, LEGEND_INDEX } from '../game/characters';
 import { useFace } from '../game/faces';
 import { useGame } from '../state/store';
+import { SafeBoundary } from './SafeBoundary';
 
 const CharacterViewer = lazy(() => import('../game/CharacterViewer'));
 
 function Viewer({ index, locked = false }: { index: number; locked?: boolean }) {
   return (
     <div className="char-stage">
-      <Suspense fallback={<div className="char-loading">LOADING…</div>}>
-        <CharacterViewer index={index} locked={locked} className="char-canvas" />
-      </Suspense>
+      <SafeBoundary key={`${index}-${locked}`} fallback={<div className="char-loading">オフラインのため表示できません（一度オンラインで見たキャラは表示できます）</div>}>
+        <Suspense fallback={<div className="char-loading">LOADING…</div>}>
+          <CharacterViewer index={index} locked={locked} className="char-canvas" />
+        </Suspense>
+      </SafeBoundary>
       {!locked && <p className="char-hint">ドラッグ／スワイプで回せます</p>}
     </div>
   );

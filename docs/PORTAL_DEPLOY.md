@@ -77,9 +77,11 @@ git push origin <確認したブランチ>
 ```
 
 - コミットメッセージに、元にした `label-drop` のコミットID を書いておくと、どの版を出したか追える。
-- push 後、ポータル上の `about-ia/app/` を開き、新しい版が表示されることを確認する（Service Worker は常にネットから最新版を読む設定なので、開き直せば反映される）。
+- push 後、ポータル上の `about-ia/app/` を開き、新しい版が表示されることを確認する（アプリの Service Worker は、オンラインなら常にネットから最新版を読み、オフラインのときだけ保存済みの版で動く。開き直せば反映される）。
 
 ## 4. 注意
+
+- アプリの Service Worker（`app/public/sw.js`）は `label-drop-*` という名前のキャッシュだけを扱う。ポータル LP の `about-ia/sw.js`（network-first）や、ほかのページのキャッシュには触れない。オフライン用に保存するファイルの一覧（`precache.json`）はビルド時に自動で作られる。
 
 - `app/vite.config.ts` は `base: './'`（相対パス）なので、どのサブパス（`/label-drop/app/`、`/about-ia/app/` など）に置いても動く。共有ボタンのURLも、開いている場所から自動で求めるので、書き換えは不要。
 - `.github/workflows/pages.yml`（自動デプロイ）は `label-drop` 専用。ポータル側では使われない。

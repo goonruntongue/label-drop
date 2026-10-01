@@ -1,5 +1,7 @@
+import { readdirSync, statSync } from 'node:fs';
 import { networkInterfaces } from 'node:os';
-import { defineConfig } from 'vite';
+import { join, relative } from 'node:path';
+import { defineConfig, type Plugin } from 'vite';
 import react from '@vitejs/plugin-react';
 
 const PORT = 5173;
@@ -17,8 +19,33 @@ function lanUrls(): string[] {
   return urls.sort((a, b) => rank(a) - rank(b));
 }
 
+/** Files under public/ (relative, forward slashes). */
+function publicFiles(dir: string, root = dir): string[] {
+  return readdirSync(dir).flatMap((name) => {
+    const full = join(dir, name);
+    return statSync(full).isDirectory() ? publicFiles(full, root) : [relative(root, full).split('\\').join('/')];
+  });
+}
+
+/**
+ * precache.json: what the service worker keeps for offline play — every build file plus the
+ * public shell (manifest, icons). Character models are left out (≈0.9 MB each); the service
+ * worker caches each one the first time it is shown.
+ */
+function precacheManifest(): Plugin {
+  return {
+    name: 'label-drop-precache',
+    apply: 'build',
+    generateBundle(_, bundle) {
+      const shell = publicFiles('public').filter((f) => f !== 'sw.js' && !f.startsWith('characters/'));
+      const files = ['./', ...Object.keys(bundle), ...shell];
+      this.emitFile({ type: 'asset', fileName: 'precache.json', source: JSON.stringify({ files }, null, 1) });
+    },
+  };
+}
+
 export default defineConfig(({ command }) => ({
-  plugins: [react()],
+  plugins: [react(), precacheManifest()],
   // Relative asset paths so the build works under any sub-path (GitHub Pages serves it at /label-drop/app/).
   base: './',
   // host: true listens on all interfaces (0.0.0.0), not just localhost, for same-LAN device testing.

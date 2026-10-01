@@ -9,6 +9,7 @@ import { cheerFor, levelUpCheer } from '../game/cheers';
 import type { CelebrationVariant } from '../game/CelebrationScene';
 import { titleFor } from '../game/levels';
 import { useGame } from '../state/store';
+import { SafeBoundary } from './SafeBoundary';
 
 const CelebrationScene = lazy(() => import('../game/CelebrationScene'));
 const reducedMotion = typeof matchMedia !== 'undefined' && matchMedia('(prefers-reduced-motion: reduce)').matches;
@@ -80,9 +81,11 @@ export function RoundEffects() {
   return (
     <div key={show.id} className={`round-fx is-${show.variant}`} aria-hidden="true">
       {!reducedMotion && (
-        <Suspense fallback={null}>
-          <CelebrationScene variant={show.variant} />
-        </Suspense>
+        <SafeBoundary>
+          <Suspense fallback={null}>
+            <CelebrationScene variant={show.variant} />
+          </Suspense>
+        </SafeBoundary>
       )}
       <div className="round-fx-banner">
         <p className="round-fx-heading">{show.heading}</p>

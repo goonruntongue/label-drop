@@ -8,6 +8,7 @@ import { lazy, Suspense, useCallback, useEffect, useRef, useState } from 'react'
 import { currentCharacterIndex } from '../game/characters';
 import { useGame } from '../state/store';
 import type { Reaction } from '../game/BuddyScene';
+import { SafeBoundary } from './SafeBoundary';
 
 const BuddyScene = lazy(() => import('../game/BuddyScene'));
 const scene = () => import('../game/BuddyScene');
@@ -124,9 +125,11 @@ export function Buddy() {
         </p>
       )}
       <div className="buddy-figure" title="ドラッグ／スワイプで回せます" {...turn}>
-        <Suspense fallback={null}>
-          <BuddyScene index={index} />
-        </Suspense>
+        <SafeBoundary>
+          <Suspense fallback={null}>
+            <BuddyScene index={index} />
+          </Suspense>
+        </SafeBoundary>
       </div>
     </div>
   );
