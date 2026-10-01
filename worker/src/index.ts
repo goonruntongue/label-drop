@@ -7,7 +7,7 @@ import { generateProblem } from './ai/generate';
 import { budgetStatus, usedToday } from './budget';
 import { pregenerate } from './cron';
 import { HttpError, type Env } from './env';
-import { parseRequest, pickProblem, serveProblem, TIERS, type Tier } from './problems';
+import { parseRequest, pickAiProblem, pickProblem, serveProblem, TIERS, type Tier } from './problems';
 
 const LOCALHOST = /^http:\/\/(localhost|127\.0\.0\.1)(:\d+)?$/;
 
@@ -55,6 +55,15 @@ app.post('/api/problem', async (c) => {
   const [problem, budget] = await Promise.all([pickProblem(c.env, req), budgetStatus(c.env)]);
   if (!problem) throw new HttpError(404, 'No problem available');
   return c.json({ problem, budget });
+});
+
+// An AI problem from stock, with its answer, for the game to play and check itself (option A).
+app.post('/api/problem/ai', async (c) => {
+  await requireUser(c);
+  const req = parseRequest(await c.req.json().catch(() => ({})));
+  const problem = await pickAiProblem(c.env, req);
+  if (!problem) throw new HttpError(404, 'No AI problem in stock');
+  return c.json({ problem, budget: await budgetStatus(c.env) });
 });
 
 // On-demand generation (SPEC 9.4 /api/generate): FULL energy only, per-player quota and rate limit.

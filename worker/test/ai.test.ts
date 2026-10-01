@@ -242,3 +242,20 @@ describe('cron pre-generation', () => {
     expect(ai.calls).toHaveLength(0);
   });
 });
+
+describe('POST /api/problem/ai (option A: with the answer)', () => {
+  const post = (body: unknown) =>
+    app.request('/api/problem/ai', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(body) }, base, { waitUntil() {}, passThroughOnException() {}, props: {} } as unknown as ExecutionContext);
+
+  it('returns a whole AI problem, and 404 when the stock is empty', async () => {
+    expect((await post({ tiers: ['web'] })).status).toBe(404);
+    await generateProblem(envWith(fakeAi([JSON.stringify(variant(20))])), { tier: 'web', userId: null });
+    const res = await post({ tiers: ['web'] });
+    expect(res.status).toBe(200);
+    const { problem } = await res.json<{ problem: { id: string; source: string; tier: string; groups: { label: string; altLabels: string[]; items: unknown[] }[] } }>();
+    expect(problem).toMatchObject({ source: 'ai', tier: 'web' });
+    expect(problem.id.startsWith('ai:')).toBe(true);
+    expect(problem.groups).toHaveLength(5);
+    expect(problem.groups[0].altLabels.length).toBeGreaterThan(0);
+  });
+});

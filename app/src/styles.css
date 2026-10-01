@@ -1343,3 +1343,6 @@ body.is-dragging .buddy-figure, .buddy.is-hidden .buddy-figure { pointer-events:
 @media (pointer: coarse) {
   .tray-label, .hud-field select, .settings-field select, .hud-stepper input, .device-pick select { font-size: 16px; }
 }
+
+/* A problem made by the AI (option A): a small tag next to its title. */
+.ai-made { display: inline-block; margin-left: 8px; padding: 2px 8px; border-radius: 999px; border: 1px solid var(--line); color: var(--accent); font-size: 11px; font-weight: 700; vertical-align: middle; letter-spacing: 0.04em; }

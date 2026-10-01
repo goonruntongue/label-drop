@@ -1,6 +1,8 @@
 // Picking a problem to play (SPEC 9.4 POST /api/problem): templates seeded from the game's own data
 // (scripts/seed-templates.mjs) and AI-made ones (P4) share the table; unplayed AI problems come first.
-// The answer (which keywords go together, the model labels) never leaves the server here.
+// The answer (which keywords go together, the model labels) never leaves the server here — except
+// pickAiProblem: decided 2026-10-02 (option A), AI problems go out whole and are checked in the
+// browser like the bundled templates, until answers are checked on the server (P5).
 import { HttpError, type Env } from './env';
 
 export const TIERS = ['everyday', 'service', 'web'] as const;
@@ -68,6 +70,27 @@ export function toView(id: string, source: ProblemView['source'], p: Problem): P
     groupCount: p.groups.length,
     keywords: shuffle(p.groups.flatMap((g) => g.items)),
   };
+}
+
+/** An AI problem with its answer (groups, labels, altLabels), least-played first, skipping ids the
+ *  player already has; dropping the exclusion when nothing else is left. */
+export async function pickAiProblem(env: Env, req: Required<ProblemRequest>): Promise<(Problem & { source: 'ai' }) | null> {
+  const tierMarks = req.tiers.map((_, i) => `?${i + 1}`).join(', ');
+  const query = (withExclude: boolean) => {
+    const ex = withExclude ? req.exclude : [];
+    const exMarks = ex.map((_, i) => `?${req.tiers.length + i + 1}`).join(', ');
+    return env.DB.prepare(
+      `SELECT id, body FROM problems
+       WHERE status = 'ready' AND source = 'ai' AND difficulty IN (${tierMarks})${ex.length ? ` AND id NOT IN (${exMarks})` : ''}
+       ORDER BY play_count ASC, RANDOM() LIMIT 1`,
+    )
+      .bind(...req.tiers, ...ex)
+      .first<{ id: string; body: string }>();
+  };
+  const row = (await query(true)) ?? (req.exclude.length ? await query(false) : null);
+  if (!row) return null;
+  await env.DB.prepare('UPDATE problems SET play_count = play_count + 1 WHERE id = ?1').bind(row.id).run();
+  return { ...(JSON.parse(row.body) as Problem), id: row.id, source: 'ai' };
 }
 
 /** A stored problem by id, counted as played. */

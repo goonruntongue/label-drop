@@ -14,6 +14,7 @@ import { Celebration } from './ui/Celebration';
 import { DebugPanel } from './ui/DebugPanel';
 import { RoundEffects } from './ui/RoundEffects';
 import { useAi } from './api';
+import { prefetchAi, tiersForLevel } from './aiProblems';
 import { Buddy } from './ui/Buddy';
 import { CharacterGallery, CharacterReveal } from './ui/Characters';
 import { Tutorial } from './ui/Tutorial';
@@ -85,6 +86,8 @@ export default function App() {
   useKeyboard();
   useEffect(() => {
     void useAi.getState().refresh(); // AI ENERGY: once at start (no polling)
+    const { mode, level } = useGame.getState();
+    if (mode === 'level') void prefetchAi(tiersForLevel(level)); // an AI problem for the next board
   }, []);
 
   return (

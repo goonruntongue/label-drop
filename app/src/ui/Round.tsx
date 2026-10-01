@@ -49,7 +49,10 @@ export function BriefingOverlay() {
         ) : (
           <p className="kicker">FREE PLAY</p>
         )}
-        <h2>{problem.title}</h2>
+        <h2>
+          {problem.title}
+          {problem.source === 'ai' && <span className="ai-made" title="AI が作った問題です">AI 作問</span>}
+        </h2>
         <dl className="brief-rows">
           <div>
             <dt>だれが</dt>
@@ -111,7 +114,7 @@ export function BriefCard() {
   const [collapsed, setCollapsed] = useState(initialCollapsed);
   if (open) return null;
   const problem = PROBLEMS[problemIndex];
-  const tag = mode === 'level' ? `LV ${level} ・ お題` : 'お題';
+  const tag = `${mode === 'level' ? `LV ${level} ・ お題` : 'お題'}${problem.source === 'ai' ? ' ・ AI 作問' : ''}`;
   const toggle = () => {
     const next = !collapsed;
     setCollapsed(next);

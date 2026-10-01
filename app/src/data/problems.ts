@@ -5,6 +5,7 @@
 import { EVERYDAY_EXTRA } from './topics-everyday';
 import { SERVICE_TOPICS } from './topics-service';
 import { WEB_EXTRA } from './topics-web';
+import { LABEL_ALIASES } from './labelAliases';
 
 export interface Keyword {
   text: string;
@@ -22,7 +23,9 @@ export interface Problem {
   brief: { user: string; scene: string; goal: string };
   /** One step deeper than the generic guide: a lens that fits this topic. Never names the groups. */
   axisHint: string;
-  groups: { label: string; items: Keyword[] }[];
+  groups: { label: string; items: Keyword[]; altLabels?: string[] }[];
+  /** Set on problems made by the AI (they join the list at runtime, see aiProblems.ts). */
+  source?: 'ai';
 }
 
 const k = (text: string, desc: string): Keyword => ({ text, desc });
@@ -523,6 +526,15 @@ export const TIER_LABELS: Record<Tier, string> = {
   service: '身近なサービス',
   web: 'Webサイト',
 };
+
+/** Adds a problem (an AI-made one) to the list once, with its alternative labels; returns its index. */
+export function addProblem(p: Problem): number {
+  const at = PROBLEMS.findIndex((x) => x.id === p.id);
+  if (at >= 0) return at;
+  PROBLEMS.push(p);
+  LABEL_ALIASES[p.id] = Object.fromEntries(p.groups.map((g) => [g.label, g.altLabels ?? []]));
+  return PROBLEMS.length - 1;
+}
 
 /** Topic indexes by tier. */
 export function topicsOf(...tiers: Tier[]): number[] {

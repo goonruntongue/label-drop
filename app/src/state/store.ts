@@ -1,5 +1,6 @@
 import { create } from 'zustand';
-import { PROBLEMS, topicsOf } from '../data/problems';
+import { addProblem, PROBLEMS, topicsOf, type Problem } from '../data/problems';
+import { indexOfProblem, prefetchAi, takeAi, tiersForLevel } from '../aiProblems';
 import { grade, type Grade } from '../game/grading';
 import { balancedSizes, levelDef, MAX_LEVEL, sizesForLevel, STARS_TO_LEVEL_UP } from '../game/levels';
 import { THEMES, type ThemeId } from '../theme/themes';
@@ -127,6 +128,8 @@ const loadClears = () =>
  */
 export interface SaveSnapshot {
   mode: Mode; level: number; problemIndex: number;
+  /** Which problem, by id (indexes of AI problems differ between visits); the whole problem for AI ones. */
+  problemId?: string; problem?: Problem;
   items: Item[]; assign: Record<string, string | null>; assignedAt: Record<string, number>;
   trays: Tray[]; history: Move[]; blockCount: number;
   axisHintShown: boolean; assistUsed: { some: number; all: boolean };
@@ -245,7 +248,10 @@ function boardFor(mode: Mode, level: number, problemIndex: number, blockCount: n
 function topicFor(mode: Mode, level: number, current: number): number {
   // Free mode keeps the chosen topic; on startup (no topic yet) it starts from a random one.
   if (mode !== 'level') return current >= 0 && current < PROBLEMS.length ? current : Math.floor(Math.random() * PROBLEMS.length);
-  const pool = level <= 3 ? topicsOf('everyday') : level <= 6 ? topicsOf('everyday', 'service') : PROBLEMS.map((_, i) => i);
+  // An AI problem fetched ahead for this level comes first (option A, 2026-10-02); else a template.
+  const ai = takeAi(tiersForLevel(level), current);
+  if (ai !== null) return ai;
+  const pool = (level <= 3 ? topicsOf('everyday') : level <= 6 ? topicsOf('everyday', 'service') : PROBLEMS.map((_, i) => i)).filter((i) => PROBLEMS[i].source !== 'ai');
   const others = pool.filter((i) => i !== current);
   const choices = others.length ? others : pool;
   return choices[Math.floor(Math.random() * choices.length)];
@@ -430,11 +436,13 @@ export const useGame = create<GameState>()((set, get) => {
       const topic = topicFor(mode, level, problemIndex);
       set({ mode, ...boardFor(mode, level, topic, blockCount) });
       saveProgress();
+      if (mode === 'level') void prefetchAi(tiersForLevel(level));
     },
 
     newRound: () => {
       const { mode, level, problemIndex, blockCount } = get();
       set(boardFor(mode, level, topicFor(mode, level, problemIndex), blockCount));
+      if (mode === 'level') void prefetchAi(tiersForLevel(get().level));
     },
 
     submit: () => {
@@ -579,6 +587,8 @@ export const useGame = create<GameState>()((set, get) => {
       const s = get();
       const snapshot: SaveSnapshot = {
         mode: s.mode, level: s.level, problemIndex: s.problemIndex,
+        problemId: PROBLEMS[s.problemIndex]?.id,
+        problem: PROBLEMS[s.problemIndex]?.source === 'ai' ? PROBLEMS[s.problemIndex] : undefined,
         items: s.items, assign: s.assign, assignedAt: s.assignedAt, trays: s.trays, history: s.history,
         blockCount: s.blockCount, axisHintShown: s.axisHintShown, assistUsed: s.assistUsed,
       };
@@ -600,9 +610,17 @@ export const useGame = create<GameState>()((set, get) => {
       const saved = get().saveSlots[slot];
       if (!saved || get().slotBlocked(slot)) return false;
       const b = saved.snapshot;
+      // The problem by id when known (AI problems are re-added from the save itself); older saves by index.
+      let problemIndex = b.problemIndex;
+      if (b.problemId) {
+        const at = indexOfProblem(b.problemId);
+        if (at >= 0) problemIndex = at;
+        else if (b.problem) problemIndex = addProblem(b.problem);
+        else return false;
+      }
       // Board only: progress, records, badge and settings stay as they are now.
       set({
-        problemIndex: b.problemIndex, items: b.items, assign: b.assign, assignedAt: b.assignedAt,
+        problemIndex, items: b.items, assign: b.assign, assignedAt: b.assignedAt,
         trays: b.trays, history: b.history, blockCount: b.blockCount,
         axisHintShown: b.axisHintShown, assistUsed: b.assistUsed,
         result: null, resultOpen: false, levelUpTo: null, briefingOpen: false,

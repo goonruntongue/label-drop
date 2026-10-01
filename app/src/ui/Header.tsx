@@ -189,7 +189,7 @@ function SaveSlots({ onClose }: { onClose: () => void }) {
           {Array.from({ length: SAVE_SLOT_COUNT }, (_, i) => {
             const slot = slots[i];
             const blocked = slot ? slotBlocked(i) : null;
-            const topic = slot ? PROBLEMS[slot.snapshot.problemIndex]?.title : '';
+            const topic = slot ? (slot.snapshot.problem?.title ?? PROBLEMS[slot.snapshot.problemIndex]?.title) : '';
             const placed = slot ? Object.values(slot.snapshot.assign).filter(Boolean).length : 0;
             return (
               <article className="save-slot" key={i}>
@@ -313,6 +313,7 @@ export function Header() {
                 p.tier === tier ? (
                   <option key={p.id} value={i}>
                     {p.title}
+                    {p.source === 'ai' ? '（AI）' : ''}
                   </option>
                 ) : null,
               )}
