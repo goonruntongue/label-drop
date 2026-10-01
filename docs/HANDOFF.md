@@ -1,0 +1,49 @@
+# 引き継ぎメモ（2026-10-01 時点）
+
+> 新しいスレッドで作業を再開するときは、まずこの文書と `CLAUDE.md`、`docs/PORTAL_DEPLOY.md` を読む。
+> ユーザーとのやりとりは日本語。
+
+## 1. いまの状態
+
+- **Label Drop**（practice IA シリーズ）：IA のグルーピングとラベリングを練習する 3D ゲーム。
+- **AI を使わない範囲は、ほぼ完成**（仕様書の P0〜P2 相当）。AI（Cloudflare Workers AI）による出題・評価は未着手で、仕様だけ `docs/SPEC.md` にある（P3 以降）。
+- 最新コミット: label-drop `cd211f3`（`main`）。開発版の公開: https://goonruntongue.github.io/label-drop/app/
+- ポータルにも反映済み: knowledge-sorrounding-AI `main` の `34c096a`（label-drop `cd211f3` 時点）。
+  公開: https://goonruntongue.github.io/knowledge-sorrounding-AI/about-ia/app/dist/
+
+## 2. 守ること（ユーザーとの取り決め）
+
+- **改変はすべて IA-DX（ここ）で行う。** ここが唯一の正。
+- 「ポータルに反映して」と言われたら `docs/PORTAL_DEPLOY.md` の手順で反映する。
+  - **反映先のブランチは毎回ユーザーに確認する**（これまでは毎回「main に直接」）。
+  - 反映前に、ポータルの `origin/main` に Label Drop への直接の変更（Codex など）が入っていないか確認し、入っていれば先に IA-DX に取り込む。
+  - やり方：ポータルの `origin/main` から一時 worktree を作り、`about-ia/app/dist` だけを差し替えてコミット・push。ユーザーが開いているブランチ（`git-github-lottie-illustrations`）には触らない。あわせて `about-ia/app/` の参照用ソースを IA-DX と同じにする（Git 管理外）。
+- ポータル側の AI 向けルール: `knowledge-sorrounding-AI/LABEL_DROP_EDITING_RULES.md`（Git 管理外）。
+- ポータル LP（`about-ia/index.html` など）は触らない。
+
+## 3. この日に入れたもの（主なもの）
+
+- 演出3段階：クリア（★1以上）＜レベルアップ（3Dクラッカー）＜全クリア（Lv10 で★5、three.js の演出＋タイプライターのメッセージ）
+- 称号（魔法使い系 Lv1 IA見習い魔法使い〜Lv10 IA大賢者、全クリアで「伝説のIA大賢者」）、👑クリアの証
+- 3D キャラ 11体（`app/public/characters/lv01〜11.glb`）：レベルアップ時の登場、📖 図鑑（未解放はシルエット）、盤面右上のキャラ（ドラッグでパン／チルト、タップで跳ねる、答え合わせに反応、状況別のセリフと約40秒ごとの応援）、ヘッダーの顔アイコン
+- ひとことコメント（★別・レベル別。どのテーマでも違和感のない言い回しに統一）
+- 修正 1〜9：ラベルの言い換え候補とラベルボーナス／どちらの箱でも正解の語／セーブは盤面だけ／スマホ長押しの誤動作防止／進捗リセット＋2回確認／全クリア演出／アニメーションのチュートリアル／アプリだけオフライン対応（SW は `label-drop-*` キャッシュのみ）／スプラッシュ画面
+- ラベルは **Lv1 から必須**。Lv3 は「伝わる名前」に変更。
+- ヘッダーのタイトル：IA 紹介ページから開いたら「← 前に戻る」、それ以外は「Label Drop」の表示だけ（Codex の変更を取り込んだもの）。
+- 決定事項は `docs/SPEC.md` の「13. 決定事項」#11〜#18 とレベル表に記録済み。
+
+## 4. 残っていること（候補）
+
+- **実機確認（ユーザーが実施中）**：長押しで意味を読んでも投げられないか／キャラのスワイプ／iPhone でのオフライン起動／ホーム画面に追加したアプリとしての動作。結果を聞いて直す。
+- 仕様書 5.5 の P2 完成条件（アクセシビリティ、モバイル、設定など）との突き合わせ。まだしていない。
+- 経過時間の記録と表示（決定事項 #7「スコアには入れず、記録と表示だけ」）が未実装。
+- その後は P3（Worker＋D1、認証の切り替え、AI ENERGY メーター）へ。
+
+## 5. 開発のコツ
+
+- `npm --prefix app run dev`（5173）、`npm --prefix app run typecheck`、`npm --prefix app run build`。
+- 本番ビルドの確認は `.claude/launch.json` の `app-build-preview`（4173）。
+- ブラウザから store を触るときは、HMR で読み込み直された版を使う：
+  `performance.getEntriesByType('resource').map(e => e.name).filter(n => /state\/store\.ts/.test(n)).pop()` を `import()`。
+- `?debug` を URL に付けるとデバッグパネル（レベル・★の変更、レベルアップ演出のプレビュー、全クリア演出の再生、図鑑、👑の消去）。
+- コミットの末尾には `Co-Authored-By: Claude Opus 5.5 <noreply@anthropic.com>`。
