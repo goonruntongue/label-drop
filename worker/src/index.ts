@@ -1,10 +1,11 @@
-// Label Drop API (SPEC 9.4). P3: who am I, and how much AI energy is left today.
-// AI generation / evaluation come in P4 / P5; until then the game plays from its bundled templates.
+// Label Drop API (SPEC 9.4). P3: who am I, how much AI energy is left today, and a problem to play
+// (templates for now). AI generation / evaluation come in P4 / P5.
 import { Hono } from 'hono';
 import { cors } from 'hono/cors';
 import { requireUser } from './auth';
 import { budgetStatus, usedToday } from './budget';
 import { HttpError, type Env } from './env';
+import { parseRequest, pickProblem } from './problems';
 
 const LOCALHOST = /^http:\/\/(localhost|127\.0\.0\.1)(:\d+)?$/;
 
@@ -44,6 +45,14 @@ app.get('/api/me', async (c) => {
 app.get('/api/status', async (c) => {
   await requireUser(c); // same gate as every other API
   return c.json(await budgetStatus(c.env));
+});
+
+app.post('/api/problem', async (c) => {
+  await requireUser(c);
+  const req = parseRequest(await c.req.json().catch(() => ({})));
+  const [problem, budget] = await Promise.all([pickProblem(c.env, req), budgetStatus(c.env)]);
+  if (!problem) throw new HttpError(404, 'No problem available');
+  return c.json({ problem, budget });
 });
 
 app.notFound((c) => c.json({ error: 'Not found' }, 404));

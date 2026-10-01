@@ -42,7 +42,9 @@
 - **P3（進行中）**: `worker/` に API の Worker（Hono＋D1、`AUTH_MODE` none/access、`/api/me`・`/api/status`、テスト8件）と、AI ENERGY メーター（`app/src/api.ts`、`ui/AiEnergy.tsx`）を作った。
   - 2026-10-02 に Cloudflare へ作成・デプロイ済み（ユーザー承認）: D1 `label-drop`（APAC、id `ee4485e7-…`、マイグレーション適用済み）、Worker `label-drop-api` → https://label-drop-api.goonruntongue.workers.dev 。secret: `ADMIN_EMAILS`、`ANON_SALT`。
   - Worker の更新は `npm --prefix worker run deploy`（テストを通してから）。D1 のスキーマを変えたら `npx wrangler d1 migrations apply DB --remote`。
-- P3 の残り: テンプレの問題を D1 へ移す（`/api/problem`）。その後 P4（AI 出題）。**Cloudflare は従量課金が自動で発生しないこと**（Workers Free のまま、超過はエラーになるものだけ。SPEC 8.1 の決定）。
+- テンプレ30問を D1 に入れ、`POST /api/problem` を公開した（答えは返さない。テスト12件）。テンプレを変えたら `npm --prefix worker run seed:remote`。
+- **P3 完了（2026-10-02）**。ゲームはまだ内蔵テンプレで遊ぶ（API からの出題への切り替えは P4〜P5）。
+- 次は P4（AI 出題: 生成パイプライン、検証、プール、Cron の作り置き、レート制限）。Workers AI の無料枠はアカウントの他の Worker と共有。**Cloudflare は従量課金が自動で発生しないこと**（Workers Free のまま、超過はエラーになるものだけ。SPEC 8.1 の決定）。
 
 ## 5. 開発のコツ
 

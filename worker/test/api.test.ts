@@ -119,3 +119,43 @@ describe('/api/status (AI ENERGY)', () => {
     expect(await status()).toMatchObject({ mode: 'offline', remainingPct: 0 });
   });
 });
+
+describe('POST /api/problem (templates)', () => {
+  const post = (body: unknown, vars: Partial<Env> = {}) =>
+    app.request('/api/problem', { method: 'POST', headers: { Origin: ORIGIN, 'Content-Type': 'application/json' }, body: JSON.stringify(body) }, { ...env, ...vars }, ctx());
+  type View = { id: string; source: string; tier: string; groupCount: number; keywords: { text: string; desc: string }[] } & Record<string, unknown>;
+
+  it('serves a template from the requested tiers without the answer', async () => {
+    const res = await post({ tiers: ['everyday'] });
+    expect(res.status).toBe(200);
+    const { problem, budget } = await res.json<{ problem: View; budget: { mode: string } }>();
+    expect(problem.id.startsWith('tpl:')).toBe(true);
+    expect(problem).toMatchObject({ source: 'template', tier: 'everyday' });
+    expect(problem.groupCount).toBeGreaterThanOrEqual(3);
+    expect(problem.keywords.length).toBeGreaterThanOrEqual(problem.groupCount * 3);
+    expect(problem.keywords[0]).toEqual({ text: expect.any(String), desc: expect.any(String) });
+    expect(problem).not.toHaveProperty('groups'); // no grouping, no model labels
+    expect(JSON.stringify(problem)).not.toContain('"label"');
+    expect(budget.mode).toBe('full');
+  });
+
+  it('skips excluded ids, and plays the least-played first', async () => {
+    const all = await env.DB.prepare("SELECT id FROM problems WHERE difficulty = 'web'").all<{ id: string }>();
+    const ids = all.results.map((r) => r.id);
+    expect(ids.length).toBeGreaterThan(1);
+    const keep = ids[0];
+    const { problem } = await (await post({ tiers: ['web'], exclude: ids.slice(1) })).json<{ problem: View }>();
+    expect(problem.id).toBe(keep);
+    // Everything excluded: still serves something instead of failing.
+    expect((await post({ tiers: ['web'], exclude: ids })).status).toBe(200);
+  });
+
+  it('rejects bad requests', async () => {
+    expect((await post({ tiers: ['hard'] })).status).toBe(400);
+    expect((await post({ exclude: Array.from({ length: 101 }, (_, i) => `x${i}`) })).status).toBe(400);
+  });
+
+  it('is behind the same gate in access mode', async () => {
+    expect((await post({}, { AUTH_MODE: 'access' })).status).toBe(401);
+  });
+});

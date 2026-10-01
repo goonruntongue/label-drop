@@ -7,14 +7,18 @@
     "dev": "wrangler dev",
     "db:local": "wrangler d1 migrations apply DB --local",
     "typecheck": "tsc --noEmit",
-    "test": "wrangler d1 migrations apply DB --local --persist-to .wrangler/test-state && vitest run",
-    "deploy": "npm test && wrangler deploy"
+    "test": "wrangler d1 migrations apply DB --local --persist-to .wrangler/test-state && node scripts/seed-templates.mjs && wrangler d1 execute DB --local --persist-to .wrangler/test-state --file seed/templates.sql && vitest run",
+    "deploy": "npm test && wrangler deploy",
+    "seed": "node scripts/seed-templates.mjs",
+    "seed:local": "node scripts/seed-templates.mjs && wrangler d1 execute DB --local --file seed/templates.sql",
+    "seed:remote": "node scripts/seed-templates.mjs && wrangler d1 execute DB --remote --file seed/templates.sql"
   },
   "dependencies": {
     "hono": "^4.13.12"
   },
   "devDependencies": {
     "@cloudflare/workers-types": "^5.20261001.1",
+    "esbuild": "^0.28.2",
     "typescript": "^7.0.2",
     "vitest": "^5.0.3",
     "wrangler": "^4.146.0"
