@@ -39,8 +39,10 @@
 - スマホ（幅900px以下）で盤面を下にスクロールすると、キャラが「答え合わせ」ボタンの右上へ移り、その先では画面右上に残る（同じ大きさ）。2026-10-02 に追加。
 - 仕様書 5.5 の P2 完成条件との突き合わせは 2026-10-02 に実施。足りなかったもの（タッチ44px、ダイアログのフォーカス、設定パネル＝文字サイズ・モーション・色覚サポート、シェーダの事前コンパイル、キーボードの案内、ヘッダーの折り返し）を入れ、仕様書（5.5、5.6、4.1、決定事項 #19・#20）を実態に合わせた。**P2 完了。**
 - 経過時間は**記録も表示もしない**ことに決定（2026-10-02、決定事項 #7 を更新）。
-- **P3（進行中）**: `worker/` に API の Worker（Hono＋D1、`AUTH_MODE` none/access、`/api/me`・`/api/status`、テスト8件）と、AI ENERGY メーター（`app/src/api.ts`、`ui/AiEnergy.tsx`）を作った。**まだ Cloudflare には作っていない**（D1 の作成・Worker のデプロイは、ユーザーの確認後）。デプロイしたら `app/src/api.ts` の `PROD_API` に URL を入れる。
-- その後は P3 の残り（Cloudflare への作成とデプロイ、テンプレを D1 へ移す）。**Cloudflare は従量課金が自動で発生しないこと**（Workers Free のまま、超過はエラーになるものだけ。SPEC 8.1 の決定）。
+- **P3（進行中）**: `worker/` に API の Worker（Hono＋D1、`AUTH_MODE` none/access、`/api/me`・`/api/status`、テスト8件）と、AI ENERGY メーター（`app/src/api.ts`、`ui/AiEnergy.tsx`）を作った。
+  - 2026-10-02 に Cloudflare へ作成・デプロイ済み（ユーザー承認）: D1 `label-drop`（APAC、id `ee4485e7-…`、マイグレーション適用済み）、Worker `label-drop-api` → https://label-drop-api.goonruntongue.workers.dev 。secret: `ADMIN_EMAILS`、`ANON_SALT`。
+  - Worker の更新は `npm --prefix worker run deploy`（テストを通してから）。D1 のスキーマを変えたら `npx wrangler d1 migrations apply DB --remote`。
+- P3 の残り: テンプレの問題を D1 へ移す（`/api/problem`）。その後 P4（AI 出題）。**Cloudflare は従量課金が自動で発生しないこと**（Workers Free のまま、超過はエラーになるものだけ。SPEC 8.1 の決定）。
 
 ## 5. 開発のコツ
 

@@ -7,7 +7,8 @@
     "dev": "wrangler dev",
     "db:local": "wrangler d1 migrations apply DB --local",
     "typecheck": "tsc --noEmit",
-    "test": "wrangler d1 migrations apply DB --local --persist-to .wrangler/test-state && vitest run"
+    "test": "wrangler d1 migrations apply DB --local --persist-to .wrangler/test-state && vitest run",
+    "deploy": "npm test && wrangler deploy"
   },
   "dependencies": {
     "hono": "^4.13.12"

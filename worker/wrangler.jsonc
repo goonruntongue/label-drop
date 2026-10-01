@@ -11,9 +11,8 @@
     {
       "binding": "DB",
       "database_name": "label-drop",
-      // Placeholder until the database is created on Cloudflare (`wrangler d1 create label-drop`).
-      // Local development and tests use a local SQLite copy and don't need the real id.
-      "database_id": "00000000-0000-0000-0000-000000000000",
+      // Created 2026-10-02 (APAC). Local development and tests use a local SQLite copy instead.
+      "database_id": "ee4485e7-40cb-4abb-9590-e12d09e3b71c",
       "migrations_dir": "migrations"
     }
   ],

@@ -2,9 +2,9 @@
 // the bundled problems with local scoring. Only the AI ENERGY meter reads it for now (P3).
 import { create } from 'zustand';
 
-/** Where the API lives. Dev: `npm --prefix worker run dev` (port 8787). Production: set once the
- *  Worker is deployed; empty means "no API yet" and the meter says AI is being prepared. */
-const PROD_API = '';
+/** Where the API lives. Dev: `npm --prefix worker run dev` (port 8787); VITE_API_BASE overrides both.
+ *  An empty value means "no API" and the meter says AI is being prepared. */
+const PROD_API = 'https://label-drop-api.goonruntongue.workers.dev';
 export const API_BASE: string = (import.meta.env.VITE_API_BASE as string | undefined) ?? (import.meta.env.DEV ? 'http://localhost:8787' : PROD_API);
 
 export type AiMode = 'full' | 'saver' | 'offline';
