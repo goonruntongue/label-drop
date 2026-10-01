@@ -4,6 +4,8 @@ import { PROBLEMS, TIER_LABELS, type Tier } from '../data/problems';
 import { LEGEND_TITLE, MAX_LEVEL, STARS_TO_LEVEL_UP, titleFor } from '../game/levels';
 import { clampBlockCount, MAX_BLOCKS, MIN_BLOCKS, SAVE_SLOT_COUNT, useGame, type Mode } from '../state/store';
 import { THEME_IDS, type ThemeId } from '../theme/themes';
+import { currentCharacterIndex } from '../game/characters';
+import { useFace } from '../game/faces';
 import { DeviceButton } from './DevicePanel';
 
 const ICONS = {
@@ -88,6 +90,13 @@ function BlockCountField() {
   );
 }
 
+/** The current character's face (rendered once from its 3D model); null until it exists. */
+function Face({ className }: { className: string }) {
+  const index = useGame(currentCharacterIndex);
+  const face = useFace(index);
+  return face ? <img className={className} src={face} alt="" draggable={false} /> : null;
+}
+
 /** Level mode: current level and stars collected toward the next one. */
 function LevelMeter() {
   const level = useGame((s) => s.level);
@@ -102,7 +111,10 @@ function LevelMeter() {
     >
       <span className="kicker">LV</span>
       <span className="num hud-level-num">{level}</span>
-      <span className="hud-title">{titleFor(level)}</span>
+      <button type="button" className="hud-me" title="魔法使い図鑑を開く" onClick={() => useGame.getState().openGallery()}>
+        <Face className="hud-face" />
+        <span className="hud-title">{titleFor(level)}</span>
+      </button>
       {clears > 0 && (
         <span className="hud-crown" title={`${LEGEND_TITLE}の証（クリア${clears}回）`} aria-hidden="true">
           👑{clears > 1 ? <small>×{clears}</small> : null}
@@ -207,6 +219,7 @@ export function Header() {
       </div>
       <div className="hud-actions">
         <button type="button" className="btn btn-gallery" title="魔法使い図鑑（キャラクター）" onClick={() => useGame.getState().openGallery()}>
+          {mode === 'free' ? <Face className="hud-face is-small" /> : null}
           <span aria-hidden="true">📖</span>
           図鑑
         </button>

@@ -26,6 +26,13 @@ const BY_STARS: Record<1 | 2 | 3, string[]> = {
   ],
 };
 
+/** ★0: encouragement instead of praise. */
+const CONSOLE = [
+  'どんまい！ 赤く光るブロックを見てみよう。',
+  'おしい挑戦！ 「だれが・何のため」をもう一度読んでみよう。',
+  'ここからが練習本番。模範と見比べてみよう。',
+];
+
 /** Keyed by the level just reached. */
 const LEVEL_UP: Record<number, string> = {
   2: '言葉を分ける魔法を覚えました。',
@@ -41,12 +48,12 @@ const LEVEL_UP: Record<number, string> = {
 
 const picked = new WeakMap<Grade, string>();
 
-/** The praise line for this result, or null when there is nothing to celebrate (★0 / practice). */
+/** The one-line comment for this result (praise, or encouragement on ★0); null in practice mode. */
 export function cheerFor(result: Grade, levelUpTo: number | null): string | null {
-  if (result.stars <= 0) return null;
+  if (result.practice) return null;
   const cached = picked.get(result);
   if (cached) return cached;
-  const pool = BY_STARS[Math.min(3, result.stars) as 1 | 2 | 3];
+  const pool = result.stars <= 0 ? CONSOLE : BY_STARS[Math.min(3, result.stars) as 1 | 2 | 3];
   const line = (levelUpTo && LEVEL_UP[levelUpTo]) || pool[Math.floor(Math.random() * pool.length)];
   picked.set(result, line);
   return line;

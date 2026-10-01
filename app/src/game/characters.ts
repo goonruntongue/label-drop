@@ -16,3 +16,10 @@ export function characterTitle(index: number): string {
 export function characterLabel(index: number): string {
   return index >= LEGEND_INDEX ? '全クリア' : `LV ${index + 1}`;
 }
+
+/** The character that represents the player right now: the current level's in level mode,
+ *  the best one unlocked in free mode. */
+export function currentCharacterIndex(s: { mode: string; level: number; bestLevel: number; clears: { count: number } }): number {
+  if (s.mode === 'level') return Math.min(MAX_LEVEL, Math.max(1, s.level)) - 1;
+  return s.clears.count > 0 ? LEGEND_INDEX : Math.max(1, s.bestLevel) - 1;
+}

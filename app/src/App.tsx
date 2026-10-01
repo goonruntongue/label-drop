@@ -14,6 +14,7 @@ import { BriefCard, BriefingOverlay, KeywordTip, ResultPanel } from './ui/Round'
 import { Celebration } from './ui/Celebration';
 import { DebugPanel } from './ui/DebugPanel';
 import { RoundEffects } from './ui/RoundEffects';
+import { Buddy } from './ui/Buddy';
 import { CharacterGallery, CharacterReveal } from './ui/Characters';
 
 // Block textures are baked once, so every glyph subset must be loaded before the stage mounts.
@@ -93,6 +94,7 @@ export default function App() {
               <span className="loading-bar" />
             </div>
           )}
+          <Buddy />
           <BriefCard />
           <TuningPanel />
           <HintPanel />

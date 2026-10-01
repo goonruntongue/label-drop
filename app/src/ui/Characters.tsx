@@ -2,6 +2,7 @@
 // The 3D viewer is lazy-loaded so the models and viewer code only download when first needed.
 import { lazy, Suspense, useEffect } from 'react';
 import { CHARACTER_COUNT, characterLabel, characterTitle, LEGEND_INDEX } from '../game/characters';
+import { useFace } from '../game/faces';
 import { useGame } from '../state/store';
 
 const CharacterViewer = lazy(() => import('../game/CharacterViewer'));
@@ -20,6 +21,16 @@ function Viewer({ index, locked = false }: { index: number; locked?: boolean }) 
 export function isUnlocked(index: number, bestLevel: number, clears: number): boolean {
   if (clears > 0) return true;
   return index < LEGEND_INDEX && index < bestLevel;
+}
+
+function SlotFace({ index, unlocked }: { index: number; unlocked: boolean }) {
+  const face = useFace(index);
+  return (
+    <>
+      {unlocked && face && <img className="char-slot-face" src={face} alt="" draggable={false} />}
+      <span className="char-slot-no">{index >= LEGEND_INDEX ? '👑' : index + 1}</span>
+    </>
+  );
 }
 
 function useEscape(onClose: () => void) {
@@ -110,7 +121,7 @@ function GalleryBody(props: {
                 title={on ? characterTitle(i) : '未解放'}
                 onClick={() => openGallery(i)}
               >
-                {i >= LEGEND_INDEX ? '👑' : i + 1}
+                <SlotFace index={i} unlocked={on} />
               </button>
             );
           })}

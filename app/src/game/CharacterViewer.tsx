@@ -2,12 +2,16 @@
 // until touched. Locked characters are drawn as a dark silhouette.
 import { ContactShadows, OrbitControls, Sparkles, useGLTF } from '@react-three/drei';
 import { Canvas } from '@react-three/fiber';
-import { Suspense, useMemo } from 'react';
+import { Suspense, useEffect, useMemo } from 'react';
 import * as THREE from 'three';
 import { characterUrl } from './characters';
+import { ensureFace } from './faces';
 
 function Model({ index, locked }: { index: number; locked: boolean }) {
   const { scene } = useGLTF(characterUrl(index));
+  useEffect(() => {
+    if (!locked) ensureFace(index, scene); // never reveal a locked face
+  }, [index, scene, locked]);
   const object = useMemo(() => {
     const clone = scene.clone(true);
     clone.traverse((o) => {

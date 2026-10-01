@@ -961,3 +961,44 @@ button, input, select { font: inherit; color: inherit; }
 .char-slot.is-current { border-color: var(--accent); box-shadow: var(--glow); opacity: 1; }
 @media (max-width: 480px) { .char-slots { grid-template-columns: repeat(6, 1fr); } }
 .celebration-character { position: relative; height: 200px; margin: 6px auto 0; width: min(300px, 100%); animation: fade-up 700ms 300ms ease-out both; touch-action: none; }
+
+/* ---------- Buddy: the player's character on the stage ---------- */
+.buddy { position: absolute; top: 10px; right: 10px; z-index: 24; display: flex; align-items: flex-start; gap: 4px; pointer-events: none; transition: opacity 250ms ease; }
+.buddy.is-hidden { opacity: 0; visibility: hidden; }
+.buddy-figure { position: relative; width: 132px; height: 160px; }
+.buddy-figure canvas { pointer-events: none; }
+.buddy-say {
+  position: relative;
+  max-width: 180px;
+  margin: 18px 0 0;
+  padding: 8px 12px;
+  border-radius: 14px;
+  background: var(--surface-raised, #0e1530);
+  border: 1px solid var(--accent);
+  color: var(--text-1);
+  font-size: 12px;
+  font-weight: 700;
+  line-height: 1.5;
+  box-shadow: var(--glow);
+  animation: fade-up 300ms ease-out both;
+}
+.buddy-say::after {
+  content: ""; position: absolute; right: -7px; top: 16px;
+  border: 6px solid transparent; border-left-color: var(--accent); border-right: 0;
+}
+@media (max-width: 640px) {
+  .buddy { top: 44px; right: 6px; }
+  .buddy-figure { width: 80px; height: 98px; }
+  .buddy-say { max-width: 150px; margin-top: 10px; font-size: 11px; }
+}
+
+/* ---------- Header face badge ---------- */
+.hud-me { display: inline-flex; align-items: center; gap: 6px; padding: 2px 8px 2px 2px; border: 1px solid transparent; border-radius: 999px; background: transparent; color: inherit; font: inherit; cursor: pointer; }
+.hud-me:hover { border-color: var(--line); background: color-mix(in srgb, var(--accent) 8%, transparent); }
+.hud-face { width: 40px; height: 24px; object-fit: cover; border-radius: 999px; background: color-mix(in srgb, var(--accent) 16%, transparent); border: 1px solid var(--line); }
+.hud-face.is-small { width: 34px; height: 20px; }
+
+.char-slot { position: relative; overflow: hidden; padding: 0; }
+.char-slot-face { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; object-position: 50% 30%; }
+.char-slot-no { position: relative; }
+.char-slot:has(.char-slot-face) .char-slot-no { position: absolute; right: 2px; bottom: 0; font-size: 9px; text-shadow: 0 0 3px #000, 0 0 3px #000; }

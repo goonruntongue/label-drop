@@ -275,7 +275,7 @@ export function ResultPanel() {
           <button type="button" className="btn" onClick={closeResult}>
             盤面を見る
           </button>
-          <button type="button" className="btn btn-primary" autoFocus onClick={newRound}>
+          <button type="button" className="btn btn-primary" ref={(el) => el?.focus({ preventScroll: true })} onClick={newRound}>
             次の問題へ
           </button>
         </div>
