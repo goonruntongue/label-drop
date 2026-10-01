@@ -5,6 +5,8 @@ import { useGame } from '../state/store';
 import { blocks, dom, drag, HOLD_Z, trayScreen, view, type BlockRT } from './runtime';
 
 const TAP_MOVE_PX = 7;
+/** Fingers jitter more than a mouse: a touch must travel further before it counts as a throw. */
+const TOUCH_MOVE_PX = 12;
 const LONG_PRESS_MS = 450;
 let longPressTimer = 0;
 const TAP_MS = 320;
@@ -191,10 +193,15 @@ function onMove(ev: PointerEvent) {
   drag.y = ev.clientY;
   drag.samples.push({ x: ev.clientX, y: ev.clientY, t: now });
   while (drag.samples.length > 2 && now - drag.samples[0].t > 200) drag.samples.shift();
-  if (!drag.moved && Math.hypot(ev.clientX - drag.startX, ev.clientY - drag.startY) > TAP_MOVE_PX) {
+  // Reading the meaning (long-press): sliding the finger never turns into a throw.
+  if (drag.peeked) {
+    useGame.getState().setPeek({ id: drag.id!, x: ev.clientX, y: ev.clientY });
+    return;
+  }
+  const limit = ev.pointerType === 'mouse' ? TAP_MOVE_PX : TOUCH_MOVE_PX;
+  if (!drag.moved && Math.hypot(ev.clientX - drag.startX, ev.clientY - drag.startY) > limit) {
     drag.moved = true;
     window.clearTimeout(longPressTimer);
-    if (drag.peeked) useGame.getState().setPeek(null);
   }
 }
 
@@ -221,13 +228,14 @@ function onUp(ev: PointerEvent) {
   const rt = id ? blocks.get(id) : undefined;
   const fromTray = drag.fromTray;
   const isTap = !drag.moved && now - drag.startT < TAP_MS;
-  const decision = isTap ? null : decideTarget(true);
+  const peeked = drag.peeked;
+  const decision = isTap || peeked ? null : decideTarget(true);
   const v = velocity(now);
   finish();
   if (!id || !rt) return;
 
   const game = useGame.getState();
-  if (drag.peeked && !drag.moved) {
+  if (peeked) {
     // Long-press was only to read the meaning: put the block back and hide the tooltip.
     drag.peeked = false;
     rt.phase = 'rest';
@@ -274,4 +282,8 @@ function onCancel(ev: PointerEvent) {
   const rt = drag.id ? blocks.get(drag.id) : undefined;
   finish();
   if (rt) rt.phase = 'rest';
+  if (drag.peeked) {
+    drag.peeked = false;
+    useGame.getState().setPeek(null);
+  }
 }

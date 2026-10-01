@@ -133,20 +133,84 @@ function LevelMeter() {
 
 function SaveSlots({ onClose }: { onClose: () => void }) {
   const slots = useGame((s) => s.saveSlots);
-  const { saveToSlot, loadFromSlot } = useGame.getState();
+  // Re-render when mode / level change so the "can't load here" reasons stay current.
+  useGame((s) => `${s.mode}:${s.level}`);
+  const { saveToSlot, loadFromSlot, slotBlocked } = useGame.getState();
   const format = (iso: string) => new Intl.DateTimeFormat('ja-JP', { month: 'numeric', day: 'numeric', hour: '2-digit', minute: '2-digit' }).format(new Date(iso));
   return (
     <div className="save-slots-backdrop" role="presentation" onMouseDown={onClose}>
       <section className="save-slots" role="dialog" aria-modal="true" aria-labelledby="save-slots-title" onMouseDown={(e) => e.stopPropagation()}>
         <header><div><span className="kicker">LOCAL SAVE</span><h2 id="save-slots-title">セーブスロット</h2></div><button type="button" className="btn-icon" aria-label="閉じる" onClick={onClose}>×</button></header>
-        <p>この端末のブラウザ内にだけ保存します。別の端末やブラウザには引き継がれません。</p>
+        <p>
+          保存するのは<b>解いている途中の盤面だけ</b>です（レベル・★・称号・👑は保存しません。いつも今の進み具合のままです）。この端末のブラウザ内にだけ保存します。
+        </p>
         <div className="save-slot-list">
           {Array.from({ length: SAVE_SLOT_COUNT }, (_, i) => {
             const slot = slots[i];
-            return <article className="save-slot" key={i}><div><b>セーブ {i + 1}</b><small>{slot ? `${format(slot.savedAt)} ・ Lv.${slot.snapshot.level} ・ ${slot.snapshot.mode === 'free' ? '無制限' : 'レベルアップ'}` : '空きスロット'}</small></div><div><button type="button" className="btn" onClick={() => saveToSlot(i)}>保存</button><button type="button" className="btn btn-primary" disabled={!slot} onClick={() => { if (loadFromSlot(i)) onClose(); }}>読み込む</button></div></article>;
+            const blocked = slot ? slotBlocked(i) : null;
+            const topic = slot ? PROBLEMS[slot.snapshot.problemIndex]?.title : '';
+            const placed = slot ? Object.values(slot.snapshot.assign).filter(Boolean).length : 0;
+            return (
+              <article className="save-slot" key={i}>
+                <div>
+                  <b>セーブ {i + 1}</b>
+                  <small>
+                    {slot
+                      ? `${format(slot.savedAt)} ・ ${slot.snapshot.mode === 'free' ? '無制限' : `LV ${slot.snapshot.level}`} ・ ${topic} ・ ${placed}/${slot.snapshot.items.length}個`
+                      : '空きスロット'}
+                  </small>
+                  {blocked && <small className="save-slot-blocked">{blocked}</small>}
+                </div>
+                <div>
+                  <button type="button" className="btn" onClick={() => (!slot || window.confirm(`セーブ ${i + 1} を今の盤面で上書きしますか？`)) && saveToSlot(i)}>
+                    保存
+                  </button>
+                  <button type="button" className="btn btn-primary" disabled={!slot || !!blocked} title={blocked ?? undefined} onClick={() => { if (loadFromSlot(i)) onClose(); }}>
+                    読み込む
+                  </button>
+                </div>
+              </article>
+            );
           })}
         </div>
+        <ResetProgress onDone={onClose} />
       </section>
+    </div>
+  );
+}
+
+/** Fix 5: wipe level progress, records, the 👑 badge and gallery unlocks — after a clear warning. */
+function ResetProgress({ onDone }: { onDone: () => void }) {
+  const level = useGame((s) => s.level);
+  const bestLevel = useGame((s) => s.bestLevel);
+  const clears = useGame((s) => s.clears.count);
+  const run = () => {
+    const lines = [
+      '進捗をリセットします。元に戻せません。',
+      '',
+      `・レベル（いま LV ${level}）と ★ → LV 1・★0 に戻ります`,
+      `・図鑑の解放（LV ${bestLevel} まで）→ LV 1 だけに戻ります`,
+      clears > 0 ? `・👑 クリアの証（${clears}回）→ 消えます` : null,
+      '・集めた★・答え合わせの回数の記録 → 0 に戻ります',
+      '',
+      'セーブスロットの盤面・テーマ・音の設定は残ります。',
+      '本当にリセットしますか？',
+    ].filter((l) => l !== null);
+    if (!window.confirm(lines.join('\n'))) return;
+    if (!window.confirm('最終確認：本当に、進捗をすべて消しますか？')) return;
+    useGame.getState().resetProgress();
+    useGame.setState({ announcement: '進捗をリセットしました' });
+    onDone();
+  };
+  return (
+    <div className="danger-zone">
+      <div>
+        <b>進捗をリセット</b>
+        <small>レベル・★・称号・👑・図鑑の解放を最初に戻します</small>
+      </div>
+      <button type="button" className="btn btn-danger" onClick={run}>
+        リセット…
+      </button>
     </div>
   );
 }

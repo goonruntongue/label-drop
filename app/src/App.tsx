@@ -85,6 +85,7 @@ export default function App() {
           ref={(el) => {
             dom.stage = el;
           }}
+          onContextMenu={(e) => e.preventDefault()}
         >
           {ready ? (
             <Stage />

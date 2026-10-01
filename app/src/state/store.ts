@@ -105,12 +105,17 @@ const loadClears = () =>
     return { count: Math.max(0, Number(c.count) || 0), lastAt: typeof c.lastAt === 'string' ? c.lastAt : null };
   });
 
+/**
+ * A save slot holds only the board in progress (decided 2026-10-01). Level, ★, records, the 👑
+ * badge and settings are never saved or restored, so loading can't roll progress back or forward.
+ * `mode` / `level` record which board this is: it can only be loaded in the same mode and level.
+ * Older saves may still carry progress fields; they are ignored.
+ */
 export interface SaveSnapshot {
-  mode: Mode; level: number; levelStars: number; problemIndex: number;
+  mode: Mode; level: number; problemIndex: number;
   items: Item[]; assign: Record<string, string | null>; assignedAt: Record<string, number>;
-  trays: Tray[]; history: Move[]; muted: boolean; tuning: Tuning; theme: ThemeId;
-  blockCount: number; axisHintShown: boolean; assistUsed: { some: number; all: boolean };
-  result: Grade | null; resultOpen: boolean; levelUpTo: number | null; briefingOpen: boolean;
+  trays: Tray[]; history: Move[]; blockCount: number;
+  axisHintShown: boolean; assistUsed: { some: number; all: boolean };
 }
 
 export interface SaveSlot { savedAt: string; snapshot: SaveSnapshot }
@@ -312,6 +317,8 @@ export interface GameState {
   saveSlots: Array<SaveSlot | null>;
   saveToSlot(slot: number): void;
   loadFromSlot(slot: number): boolean;
+  /** Why a slot can't be loaded right now (different mode / level), or null if it can. */
+  slotBlocked(slot: number): string | null;
 }
 
 const initialProgress = loadProgress();
@@ -528,27 +535,35 @@ export const useGame = create<GameState>()((set, get) => {
       if (slot < 0 || slot >= SAVE_SLOT_COUNT) return;
       const s = get();
       const snapshot: SaveSnapshot = {
-        mode: s.mode, level: s.level, levelStars: s.levelStars, problemIndex: s.problemIndex,
+        mode: s.mode, level: s.level, problemIndex: s.problemIndex,
         items: s.items, assign: s.assign, assignedAt: s.assignedAt, trays: s.trays, history: s.history,
-        muted: s.muted, tuning: s.tuning, theme: s.theme, blockCount: s.blockCount,
-        axisHintShown: s.axisHintShown, assistUsed: s.assistUsed, result: s.result,
-        resultOpen: s.resultOpen, levelUpTo: s.levelUpTo, briefingOpen: s.briefingOpen,
+        blockCount: s.blockCount, axisHintShown: s.axisHintShown, assistUsed: s.assistUsed,
       };
       const saveSlots = [...s.saveSlots];
       saveSlots[slot] = { savedAt: new Date().toISOString(), snapshot };
       save(SAVE_SLOTS_KEY, JSON.stringify(saveSlots));
       set({ saveSlots, announcement: `セーブ${slot + 1}に保存しました` });
     },
+    slotBlocked: (slot) => {
+      const saved = get().saveSlots[slot];
+      if (!saved) return 'このスロットは空です';
+      const { mode, level } = saved.snapshot;
+      const s = get();
+      if (mode !== s.mode) return mode === 'free' ? '無制限モードの盤面です。MODE を「無制限」にすると読み込めます' : 'レベルアップモードの盤面です。MODE を「レベルアップ」にすると読み込めます';
+      if (mode === 'level' && level !== s.level) return `LV ${level} の盤面です（いまは LV ${s.level}）。同じレベルのときだけ読み込めます`;
+      return null;
+    },
     loadFromSlot: (slot) => {
       const saved = get().saveSlots[slot];
-      if (!saved) return false;
-      const snapshot = saved.snapshot;
-      save(PROGRESS_KEY, JSON.stringify({ mode: snapshot.mode, level: snapshot.level, levelStars: snapshot.levelStars }));
-      save(THEME_KEY, snapshot.theme);
-      save(BLOCK_COUNT_KEY, String(snapshot.blockCount));
-      save(TUNING_KEY, JSON.stringify(snapshot.tuning));
+      if (!saved || get().slotBlocked(slot)) return false;
+      const b = saved.snapshot;
+      // Board only: progress, records, badge and settings stay as they are now.
       set({
-        ...snapshot, selected: null, dragTarget: null, hintOpen: false, tuningOpen: false, peek: null,
+        problemIndex: b.problemIndex, items: b.items, assign: b.assign, assignedAt: b.assignedAt,
+        trays: b.trays, history: b.history, blockCount: b.blockCount,
+        axisHintShown: b.axisHintShown, assistUsed: b.assistUsed,
+        result: null, resultOpen: false, levelUpTo: null, briefingOpen: false,
+        selected: null, dragTarget: null, hintOpen: false, tuningOpen: false, peek: null,
         announcement: `セーブ${slot + 1}を読み込みました`,
       });
       return true;
