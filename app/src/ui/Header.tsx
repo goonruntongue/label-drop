@@ -90,6 +90,13 @@ function BlockCountField() {
   );
 }
 
+/**
+ * The IA intro page (LP) the title links back to. It sits one level above the app on the
+ * label-drop site (/label-drop/app/ → /label-drop/index.html) but two levels above it on the
+ * portal (/about-ia/app/dist/ → /about-ia/index.html), so decide from where the app is served.
+ */
+const LP_HREF = typeof location !== 'undefined' && /\/dist\/(index\.html)?$/.test(location.pathname) ? '../../index.html' : '../index.html';
+
 /** The current character's face (rendered once from its 3D model); null until it exists. */
 function Face({ className }: { className: string }) {
   const index = useGame(currentCharacterIndex);
@@ -231,7 +238,7 @@ export function Header() {
   return (
     <header className="hud">
       <div className="hud-brand">
-        <a className="brand" href="../index.html" title="practice IA シリーズ">
+        <a className="brand" href={LP_HREF} title="情報アーキテクチャの紹介ページへ戻る">
           Label <b>Drop</b>
         </a>
         <span className="badge">P1 · 練習版</span>
