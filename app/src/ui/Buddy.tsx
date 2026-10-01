@@ -10,7 +10,47 @@ import { useGame } from '../state/store';
 import type { Reaction } from '../game/BuddyScene';
 
 const BuddyScene = lazy(() => import('../game/BuddyScene'));
-const react = (r: Reaction) => void import('../game/BuddyScene').then((m) => m.cue(r));
+const scene = () => import('../game/BuddyScene');
+const react = (r: Reaction) => void scene().then((m) => m.cue(r));
+
+/** Drag / swipe sideways to turn the character; a tap makes it hop. */
+function useTurn() {
+  const last = useRef({ x: 0, t: 0, moved: 0 });
+  const onPointerDown = (e: React.PointerEvent<HTMLDivElement>) => {
+    if (document.body.classList.contains('is-dragging')) return;
+    e.currentTarget.setPointerCapture(e.pointerId);
+    last.current = { x: e.clientX, t: performance.now(), moved: 0 };
+    void scene().then(({ buddySpin }) => {
+      buddySpin.dragging = true;
+      buddySpin.vel = 0;
+      buddySpin.lastTouch = performance.now();
+    });
+  };
+  const onPointerMove = (e: React.PointerEvent<HTMLDivElement>) => {
+    if (!e.currentTarget.hasPointerCapture(e.pointerId)) return;
+    const now = performance.now();
+    const dx = e.clientX - last.current.x;
+    const dtS = Math.max(0.001, (now - last.current.t) / 1000);
+    last.current = { x: e.clientX, t: now, moved: last.current.moved + Math.abs(dx) };
+    void scene().then(({ buddySpin }) => {
+      buddySpin.yaw += dx * 0.014;
+      buddySpin.vel = (dx * 0.014) / dtS;
+      buddySpin.lastTouch = now;
+    });
+  };
+  const onPointerUp = (e: React.PointerEvent<HTMLDivElement>) => {
+    if (!e.currentTarget.hasPointerCapture(e.pointerId)) return;
+    e.currentTarget.releasePointerCapture(e.pointerId);
+    const tapped = last.current.moved < 6;
+    void scene().then(({ buddySpin, cue }) => {
+      buddySpin.dragging = false;
+      buddySpin.lastTouch = performance.now();
+      if (performance.now() - last.current.t > 120) buddySpin.vel = 0; // held still before letting go
+      if (tapped) cue('hop');
+    });
+  };
+  return { onPointerDown, onPointerMove, onPointerUp, onPointerCancel: onPointerUp };
+}
 
 type Say = { text: string; id: number } | null;
 
@@ -21,6 +61,7 @@ export function Buddy() {
   const sayId = useRef(0);
   const shownIndex = useRef<number | null>(null);
   const [awake, setAwake] = useState(false);
+  const turn = useTurn();
   const sleepTimer = useRef(0);
 
   const wake = useCallback((ms: number) => {
@@ -80,7 +121,7 @@ export function Buddy() {
           {say.text}
         </p>
       )}
-      <div className="buddy-figure">
+      <div className="buddy-figure" title="ドラッグ／スワイプで回せます" {...turn}>
         <Suspense fallback={null}>
           <BuddyScene index={index} />
         </Suspense>

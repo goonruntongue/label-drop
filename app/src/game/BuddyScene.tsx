@@ -14,6 +14,9 @@ const DURATION: Record<Reaction, number> = { nod: 0.4, hop: 0.7, spin: 1.2, sad:
 /** Written by the UI layer, read every frame here. */
 export const buddyCue: { reaction: Reaction | null; at: number } = { reaction: null, at: 0 };
 
+/** Player-controlled turn (drag / swipe): yaw in radians plus flick velocity. */
+export const buddySpin = { yaw: 0, vel: 0, dragging: false, lastTouch: 0 };
+
 export function cue(reaction: Reaction) {
   buddyCue.reaction = reaction;
   buddyCue.at = performance.now() / 1000;
@@ -43,9 +46,19 @@ function Figure({ index }: { index: number }) {
     if (buddyCue.reaction === 'appear' && performance.now() / 1000 - buddyCue.at < 6) cue('appear');
   }, [index]);
 
-  useFrame(({ clock }) => {
+  useFrame(({ clock }, rawDt) => {
     const g = ref.current;
     if (!g) return;
+    const dt = Math.min(rawDt, 1 / 30);
+    // Player turn: coast after a flick, then drift back to facing front.
+    if (!buddySpin.dragging) {
+      buddySpin.yaw += buddySpin.vel * dt;
+      buddySpin.vel *= Math.exp(-3 * dt);
+      if (performance.now() - buddySpin.lastTouch > 2500) {
+        const front = Math.round(buddySpin.yaw / (Math.PI * 2)) * Math.PI * 2;
+        buddySpin.yaw += (front - buddySpin.yaw) * (1 - Math.exp(-2 * dt));
+      }
+    }
     const t = clock.elapsedTime;
     const since = performance.now() / 1000 - buddyCue.at;
     const r = buddyCue.reaction && since < DURATION[buddyCue.reaction] ? buddyCue.reaction : null;
@@ -84,7 +97,7 @@ function Figure({ index }: { index: number }) {
     if (r === 'appear' && p < 0.02) scale = 0.001;
 
     g.position.y = y;
-    g.rotation.set(rotX, rotY, rotZ);
+    g.rotation.set(rotX, rotY + buddySpin.yaw, rotZ);
     g.scale.set(scale, scale * scaleY, scale);
   });
 

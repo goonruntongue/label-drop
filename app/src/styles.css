@@ -1008,3 +1008,8 @@ button, input, select { font: inherit; color: inherit; }
 /* It has its own column (the block field leaves room for it), so it stays fully visible while solving;
    it only fades while a block is being dragged, in case the throw passes behind it. */
 body.is-dragging .buddy { opacity: 0.35; }
+
+/* The character can be turned by hand (its column holds no blocks). Off while a block is dragged. */
+.buddy-figure { pointer-events: auto; touch-action: none; cursor: grab; }
+.buddy-figure:active { cursor: grabbing; }
+body.is-dragging .buddy-figure, .buddy.is-hidden .buddy-figure { pointer-events: none; }
