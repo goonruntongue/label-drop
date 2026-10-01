@@ -988,7 +988,7 @@ button, input, select { font: inherit; color: inherit; }
 }
 @media (max-width: 640px) {
   .buddy { top: 52px; right: 6px; }
-  .buddy-figure { width: 82px; height: 106px; }
+  .buddy-figure { width: 108px; height: 140px; }
   .buddy-say { max-width: 150px; margin-top: 10px; font-size: 11px; }
 }
 
