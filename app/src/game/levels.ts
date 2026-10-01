@@ -21,9 +21,9 @@ export const MAX_LEVEL = 10;
 export const STARS_TO_LEVEL_UP = 5;
 
 export const LEVELS: LevelDef[] = [
-  { level: 1, title: 'はじめの一歩', sizes: [3, 3], showCapacity: true, labelsRequired: false, goal: '6個を、2つの箱に3個ずつ分けよう' },
-  { level: 2, title: '3つに分ける', sizes: [3, 3, 3], showCapacity: true, labelsRequired: false, goal: '9個を、3つの箱に3個ずつ分けよう' },
-  { level: 3, title: '名前を付ける', sizes: [3, 3, 3], showCapacity: true, labelsRequired: true, goal: '9個を3つの箱に分けて、箱に名前を付けよう' },
+  { level: 1, title: 'はじめの一歩', sizes: [3, 3], showCapacity: true, labelsRequired: true, goal: '6個を2つの箱に3個ずつ分けて、箱に名前を付けよう' },
+  { level: 2, title: '3つに分ける', sizes: [3, 3, 3], showCapacity: true, labelsRequired: true, goal: '9個を3つの箱に3個ずつ分けて、名前を付けよう' },
+  { level: 3, title: '伝わる名前', sizes: [3, 3, 3], showCapacity: true, labelsRequired: true, goal: 'お題の人がひと目でわかる名前に。模範に近い名前なら★ボーナス' },
   { level: 4, title: '少し大きな箱', sizes: [4, 4, 4], showCapacity: true, labelsRequired: true, goal: '12個を、3つの箱に4個ずつ分けよう' },
   { level: 5, title: '箱が増える', sizes: [3, 3, 3, 3], showCapacity: true, labelsRequired: true, goal: '12個を、4つの箱に3個ずつ分けよう' },
   { level: 6, title: '大きさがばらばら', sizes: [5, 4, 3], showCapacity: true, labelsRequired: true, goal: '箱ごとに入る数が違います。定員を手がかりに分けよう' },
