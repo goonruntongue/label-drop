@@ -7,8 +7,8 @@
 
 - **Label Drop**（practice IA シリーズ）：IA のグルーピングとラベリングを練習する 3D ゲーム。
 - **AI を使わない範囲は、ほぼ完成**（仕様書の P0〜P2 相当）。AI（Cloudflare Workers AI）による出題・評価は未着手で、仕様だけ `docs/SPEC.md` にある（P3 以降）。
-- 最新コミット: label-drop `cd211f3`（`main`）。開発版の公開: https://goonruntongue.github.io/label-drop/app/
-- ポータルにも反映済み: knowledge-sorrounding-AI `main` の `34c096a`（label-drop `cd211f3` 時点）。
+- 最新のアプリの変更: label-drop `5fb14c9`（`main`）。開発版の公開: https://goonruntongue.github.io/label-drop/app/
+- ポータルにも反映済み: knowledge-sorrounding-AI `main` の `615eb03`（label-drop `5fb14c9` 時点）。
   公開: https://goonruntongue.github.io/knowledge-sorrounding-AI/about-ia/app/dist/
 
 ## 2. 守ること（ユーザーとの取り決め）
@@ -34,9 +34,10 @@
 
 ## 4. 残っていること（候補）
 
-- **実機確認（ユーザーが実施中）**：長押しで意味を読んでも投げられないか／キャラのスワイプ／iPhone でのオフライン起動／ホーム画面に追加したアプリとしての動作。結果を聞いて直す。
+- 実機確認（長押し・キャラのスワイプ・iPhone のオフライン起動・ホーム画面のアプリ）は、2026-10-02 にすべて OK。
+- スマホ（幅900px以下）で盤面を下にスクロールすると、キャラが「答え合わせ」ボタンの右上へ移り、その先では画面右上に残る（同じ大きさ）。2026-10-02 に追加。
 - 仕様書 5.5 の P2 完成条件（アクセシビリティ、モバイル、設定など）との突き合わせ。まだしていない。
-- 経過時間の記録と表示（決定事項 #7「スコアには入れず、記録と表示だけ」）が未実装。
+- 経過時間は**記録も表示もしない**ことに決定（2026-10-02、決定事項 #7 を更新）。
 - その後は P3（Worker＋D1、認証の切り替え、AI ENERGY メーター）へ。
 
 ## 5. 開発のコツ
