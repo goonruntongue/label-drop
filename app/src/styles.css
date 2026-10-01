@@ -1253,9 +1253,26 @@ body.is-dragging .buddy-figure, .buddy.is-hidden .buddy-figure { pointer-events:
   .unsorted > summary { display: flex; align-items: center; }
 }
 
-/* ---------- Text size 大 (settings): the reading panels scale up ---------- */
-:root[data-text-size="large"] :is(.pane, .brief-card, .briefing-card, .result-card, .tut-card, .char-card, .save-slots, .settings, .hint-panel) { zoom: 1.15; }
-:root[data-text-size="large"] :is(.keyword-tip, .buddy-say) { font-size: 1.15em; }
+/* ---------- Text size 大 (settings): the reading panels scale up (blocks: layoutField's boost) ---------- */
+:root[data-text-size="large"] :is(.pane, .brief-card, .briefing-card, .result-card, .tut-card, .char-card, .save-slots, .settings, .hint-panel) { zoom: 1.3; }
+:root[data-text-size="large"] :is(.keyword-tip, .buddy-say) { font-size: 1.3em; }
+/* Zoom also scales a panel's size and offsets, so divide the limits by it to keep everything on screen. */
+:root[data-text-size="large"] :is(.briefing-card, .result-card, .tut-card, .char-card, .save-slots) {
+  max-width: calc((100vw - 32px) / 1.3);
+  max-height: calc((100dvh - 32px) / 1.3);
+  overflow: auto;
+}
+/* These two sit inside the stage, not the whole screen. */
+:root[data-text-size="large"] :is(.briefing-card, .result-card) { max-height: 100%; }
+:root[data-text-size="large"] .settings {
+  top: calc((var(--hud-real, var(--hud-h)) + 8px) / 1.3);
+  right: calc(12px / 1.3);
+  max-width: calc((100vw - 24px) / 1.3);
+  max-height: calc((100dvh - var(--hud-real, var(--hud-h)) - 24px) / 1.3);
+}
+@media (max-width: 640px) {
+  :root[data-text-size="large"] .settings { top: auto; right: 0; max-width: none; max-height: calc(84dvh / 1.3); }
+}
 
 /* ---------- Motion 停止 (settings): nothing animates ---------- */
 :root[data-motion="off"] *, :root[data-motion="off"] *::before, :root[data-motion="off"] *::after {

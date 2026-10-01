@@ -136,8 +136,12 @@ function packBalanced(list: Entry[], areaW: number, gapX: number, scale: number)
   return rows;
 }
 
-/** Non-overlapping, loosely jittered home positions for the floating blocks. */
-export function layoutField(list: Entry[], m: Metrics): { homes: Map<string, THREE.Vector3>; scale: number } {
+/**
+ * Non-overlapping, loosely jittered home positions for the floating blocks.
+ * `boost` (text size 大) raises the starting size; the blocks still shrink until they fit, so a
+ * crowded board (e.g. many blocks on a phone) ends up about the same size, never overlapping.
+ */
+export function layoutField(list: Entry[], m: Metrics, boost = 1): { homes: Map<string, THREE.Vector3>; scale: number } {
   const homes = new Map<string, THREE.Vector3>();
   if (!list.length) return { homes, scale: 1 };
   const areaW = m.fieldRight - m.fieldLeft;
@@ -146,7 +150,7 @@ export function layoutField(list: Entry[], m: Metrics): { homes: Map<string, THR
   const minGapY = 0.28;
 
   // Start above 1 so a sparse board (10-15 blocks) gets bigger, easier-to-read blocks.
-  let scale = 1.25;
+  let scale = 1.25 * boost;
   let rows: Entry[][] = [];
   for (;;) {
     rows = packBalanced(list, areaW, gapX, scale);

@@ -163,7 +163,7 @@ export function Director() {
     // Homes stay put while blocks leave (a full reshuffle per throw is disorienting).
     // Re-layout only on resize, when a block returns without a home, or once the field has thinned out.
     const unsorted = game.items.filter((item) => !game.assign[item.id]);
-    const key = `${state.size.width}x${state.size.height}|${blocks.size}`;
+    const key = `${state.size.width}x${state.size.height}|${blocks.size}|${game.prefs.textSize}`;
     const homeless = unsorted.some((item) => !fieldHomes.has(item.id));
     const thinned = unsorted.length > 0 && unsorted.length <= field.count * 0.6;
     if (key !== field.key || homeless || thinned) {
@@ -176,6 +176,7 @@ export function Director() {
           seed: (blocks.get(item.id)?.seed ?? 0) / (Math.PI * 2),
         })),
         m,
+        game.prefs.textSize === 'large' ? 1.2 : 1,
       );
       fieldHomes.clear();
       result.homes.forEach((home, id) => fieldHomes.set(id, home));
