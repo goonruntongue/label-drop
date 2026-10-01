@@ -77,11 +77,32 @@ const TUNING_KEY = 'practice-ia:p0:tuning';
 const THEME_KEY = 'practice-ia:theme';
 const BLOCK_COUNT_KEY = 'practice-ia:block-count';
 const PROGRESS_KEY = 'practice-ia:progress';
+const SAVE_SLOTS_KEY = 'practice-ia:save-slots:v1';
+export const SAVE_SLOT_COUNT = 3;
 
 interface Progress {
   mode: Mode;
   level: number;
   levelStars: number;
+}
+
+export interface SaveSnapshot {
+  mode: Mode; level: number; levelStars: number; problemIndex: number;
+  items: Item[]; assign: Record<string, string | null>; assignedAt: Record<string, number>;
+  trays: Tray[]; history: Move[]; muted: boolean; tuning: Tuning; theme: ThemeId;
+  blockCount: number; axisHintShown: boolean; assistUsed: { some: number; all: boolean };
+  result: Grade | null; resultOpen: boolean; levelUpTo: number | null; briefingOpen: boolean;
+}
+
+export interface SaveSlot { savedAt: string; snapshot: SaveSnapshot }
+
+function loadSaveSlots(): Array<SaveSlot | null> {
+  return load<Array<SaveSlot | null>>(SAVE_SLOTS_KEY, Array(SAVE_SLOT_COUNT).fill(null), (raw) => {
+    const slots = JSON.parse(raw);
+    return Array.isArray(slots)
+      ? Array.from({ length: SAVE_SLOT_COUNT }, (_, i) => slots[i]?.snapshot ? slots[i] as SaveSlot : null)
+      : undefined;
+  });
 }
 
 const loadTuning = () => load<Tuning>(TUNING_KEY, DEFAULT_TUNING, (raw) => ({ ...DEFAULT_TUNING, ...(JSON.parse(raw) as Partial<Tuning>) }));
@@ -235,11 +256,15 @@ export interface GameState {
   resetTuning(): void;
   toggleMute(): void;
   toggleTuning(): void;
+  saveSlots: Array<SaveSlot | null>;
+  saveToSlot(slot: number): void;
+  loadFromSlot(slot: number): boolean;
 }
 
 const initialProgress = loadProgress();
 const initialBlockCount = loadBlockCount();
 const initialTopic = topicFor(initialProgress.mode, initialProgress.level, -1);
+const initialSaveSlots = loadSaveSlots();
 
 export const useGame = create<GameState>()((set, get) => {
   const saveProgress = () => {
@@ -258,6 +283,7 @@ export const useGame = create<GameState>()((set, get) => {
     blockCount: initialBlockCount,
     hintOpen: false,
     peek: null,
+    saveSlots: initialSaveSlots,
 
     setMode: (mode) => {
       const { level, problemIndex, blockCount } = get();
@@ -377,5 +403,34 @@ export const useGame = create<GameState>()((set, get) => {
     },
     toggleMute: () => set({ muted: !get().muted }),
     toggleTuning: () => set({ tuningOpen: !get().tuningOpen }),
+    saveToSlot: (slot) => {
+      if (slot < 0 || slot >= SAVE_SLOT_COUNT) return;
+      const s = get();
+      const snapshot: SaveSnapshot = {
+        mode: s.mode, level: s.level, levelStars: s.levelStars, problemIndex: s.problemIndex,
+        items: s.items, assign: s.assign, assignedAt: s.assignedAt, trays: s.trays, history: s.history,
+        muted: s.muted, tuning: s.tuning, theme: s.theme, blockCount: s.blockCount,
+        axisHintShown: s.axisHintShown, assistUsed: s.assistUsed, result: s.result,
+        resultOpen: s.resultOpen, levelUpTo: s.levelUpTo, briefingOpen: s.briefingOpen,
+      };
+      const saveSlots = [...s.saveSlots];
+      saveSlots[slot] = { savedAt: new Date().toISOString(), snapshot };
+      save(SAVE_SLOTS_KEY, JSON.stringify(saveSlots));
+      set({ saveSlots, announcement: `セーブ${slot + 1}に保存しました` });
+    },
+    loadFromSlot: (slot) => {
+      const saved = get().saveSlots[slot];
+      if (!saved) return false;
+      const snapshot = saved.snapshot;
+      save(PROGRESS_KEY, JSON.stringify({ mode: snapshot.mode, level: snapshot.level, levelStars: snapshot.levelStars }));
+      save(THEME_KEY, snapshot.theme);
+      save(BLOCK_COUNT_KEY, String(snapshot.blockCount));
+      save(TUNING_KEY, JSON.stringify(snapshot.tuning));
+      set({
+        ...snapshot, selected: null, dragTarget: null, hintOpen: false, tuningOpen: false, peek: null,
+        announcement: `セーブ${slot + 1}を読み込みました`,
+      });
+      return true;
+    },
   };
 });

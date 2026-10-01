@@ -2,7 +2,7 @@ import { useEffect, useState, type ReactNode } from 'react';
 import * as audio from '../audio';
 import { PROBLEMS, TIER_LABELS, type Tier } from '../data/problems';
 import { MAX_LEVEL, STARS_TO_LEVEL_UP } from '../game/levels';
-import { clampBlockCount, MAX_BLOCKS, MIN_BLOCKS, useGame, type Mode } from '../state/store';
+import { clampBlockCount, MAX_BLOCKS, MIN_BLOCKS, SAVE_SLOT_COUNT, useGame, type Mode } from '../state/store';
 import { THEME_IDS, type ThemeId } from '../theme/themes';
 import { DeviceButton } from './DevicePanel';
 
@@ -13,6 +13,7 @@ const ICONS = {
   mute: 'M11 5 6 9H2v6h4l5 4V5zM22 9l-6 6M16 9l6 6',
   tune: 'M4 21v-7M4 10V3M12 21v-9M12 8V3M20 21v-5M20 12V3M1 14h6M9 8h6M17 16h6',
   hint: 'M9 18h6M10 22h4M12 2a7 7 0 0 0-4 12.7c.6.5 1 1.2 1 2V17h6v-.3c0-.8.4-1.5 1-2A7 7 0 0 0 12 2z',
+  save: 'M5 3h12l2 2v16H5V3zm3 0v6h8V3m-7 18v-7h6v7',
 };
 
 export function Icon({ d }: { d: string }) {
@@ -113,7 +114,28 @@ function LevelMeter() {
   );
 }
 
+function SaveSlots({ onClose }: { onClose: () => void }) {
+  const slots = useGame((s) => s.saveSlots);
+  const { saveToSlot, loadFromSlot } = useGame.getState();
+  const format = (iso: string) => new Intl.DateTimeFormat('ja-JP', { month: 'numeric', day: 'numeric', hour: '2-digit', minute: '2-digit' }).format(new Date(iso));
+  return (
+    <div className="save-slots-backdrop" role="presentation" onMouseDown={onClose}>
+      <section className="save-slots" role="dialog" aria-modal="true" aria-labelledby="save-slots-title" onMouseDown={(e) => e.stopPropagation()}>
+        <header><div><span className="kicker">LOCAL SAVE</span><h2 id="save-slots-title">セーブスロット</h2></div><button type="button" className="btn-icon" aria-label="閉じる" onClick={onClose}>×</button></header>
+        <p>この端末のブラウザ内にだけ保存します。別の端末やブラウザには引き継がれません。</p>
+        <div className="save-slot-list">
+          {Array.from({ length: SAVE_SLOT_COUNT }, (_, i) => {
+            const slot = slots[i];
+            return <article className="save-slot" key={i}><div><b>セーブ {i + 1}</b><small>{slot ? `${format(slot.savedAt)} ・ Lv.${slot.snapshot.level} ・ ${slot.snapshot.mode === 'free' ? '無制限' : 'レベルアップ'}` : '空きスロット'}</small></div><div><button type="button" className="btn" onClick={() => saveToSlot(i)}>保存</button><button type="button" className="btn btn-primary" disabled={!slot} onClick={() => { if (loadFromSlot(i)) onClose(); }}>読み込む</button></div></article>;
+          })}
+        </div>
+      </section>
+    </div>
+  );
+}
+
 export function Header() {
+  const [saveOpen, setSaveOpen] = useState(false);
   const problemIndex = useGame((s) => s.problemIndex);
   const total = useGame((s) => s.items.length);
   const done = useGame((s) => s.items.reduce((n, item) => (s.assign[item.id] ? n + 1 : n), 0));
@@ -196,6 +218,9 @@ export function Header() {
         <IconButton label="最初からやり直す" onClick={() => loadProblem(problemIndex)}>
           <Icon d={ICONS.reset} />
         </IconButton>
+        <IconButton label="セーブスロット" pressed={saveOpen} onClick={() => setSaveOpen(true)}>
+          <Icon d={ICONS.save} />
+        </IconButton>
         <IconButton label={muted ? 'サウンドをオンにする' : 'サウンドをオフにする'} pressed={!muted} onClick={toggleMute}>
           <Icon d={muted ? ICONS.mute : ICONS.sound} />
         </IconButton>
@@ -203,6 +228,7 @@ export function Header() {
           <Icon d={ICONS.tune} />
         </IconButton>
       </div>
+      {saveOpen && <SaveSlots onClose={() => setSaveOpen(false)} />}
     </header>
   );
 }
