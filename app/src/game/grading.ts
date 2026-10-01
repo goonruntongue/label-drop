@@ -1,6 +1,7 @@
 // Local grading (no AI): best one-to-one matching of trays to reference groups, then stars.
 import { PROBLEMS } from '../data/problems';
 import { labelIssues } from '../hints/labelRules';
+import { matchLabel, type LabelMatch } from './labelMatch';
 import type { Item, Tray } from '../state/store';
 
 /** Reference group index encoded in the item id (`<problem>-<group>-<index>`). */
@@ -21,6 +22,8 @@ export interface GradedTray {
   trayId: string;
   label: string;
   modelLabel: string;
+  /** How close the player's label is to the model label (fix 1). */
+  labelMatch: LabelMatch;
   items: GradedItem[];
 }
 
@@ -82,6 +85,7 @@ export function grade(input: {
       trayId: tray.id,
       label: tray.label.trim(),
       modelLabel: g !== undefined ? problem.groups[g].label : '—',
+      labelMatch: g !== undefined ? matchLabel(problem.id, problem.groups[g].label, tray.label) : 'none',
       items: items
         .filter((item) => assign[item.id] === tray.id)
         .map((item) => {
@@ -98,15 +102,29 @@ export function grade(input: {
   let stars = rawStars;
   const notes: string[] = [];
 
+  const labels = trays.map((tray) => tray.label);
+  const labelWarn = trays.some((tray, i) =>
+    labelIssues(
+      tray.label,
+      items.filter((item) => assign[item.id] === tray.id).map((item) => item.text),
+      labels.filter((_, j) => j !== i),
+    ).some((issue) => issue.level === 'warn'),
+  );
+
+  // Label bonus (fix 1): labels with the model's meaning (or close to it) on at least half the
+  // matched trays lift ★1–2 by one. Not with label warnings (e.g. the same label everywhere).
+  const matched = gradedTrays.filter((t) => t.modelLabel !== '—');
+  const near = matched.filter((t) => t.labelMatch === 'match' || t.labelMatch === 'close').length;
+  if (matched.length && near * 2 >= matched.length && !labelWarn) {
+    if (stars >= 1 && stars < 3) {
+      stars += 1;
+      notes.push(`ラベルボーナス ★+1：模範と同じ意味・近いラベルが ${near}/${matched.length} 箱`);
+    } else if (stars === 3 && near === matched.length) {
+      notes.push('ラベルもすべて模範と同じ意味です。お見事！');
+    }
+  }
+
   if (input.labelsRequired) {
-    const labels = trays.map((tray) => tray.label);
-    const labelWarn = trays.some((tray, i) =>
-      labelIssues(
-        tray.label,
-        items.filter((item) => assign[item.id] === tray.id).map((item) => item.text),
-        labels.filter((_, j) => j !== i),
-      ).some((issue) => issue.level === 'warn'),
-    );
     if (labelWarn && stars > 2) {
       stars = 2;
       notes.push('ラベルに注意（「その他」や重複など）が残っているので最大★2です');

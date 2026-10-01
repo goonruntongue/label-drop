@@ -53,7 +53,9 @@ export function cheerFor(result: Grade, levelUpTo: number | null): string | null
   if (result.practice) return null;
   const cached = picked.get(result);
   if (cached) return cached;
-  const pool = result.stars <= 0 ? CONSOLE : BY_STARS[Math.min(3, result.stars) as 1 | 2 | 3];
+  // "Perfect" praise only for a fully correct board (★3 can also come from the label bonus).
+  const tier = result.stars >= 3 && result.correct < result.total ? 2 : (Math.min(3, result.stars) as 1 | 2 | 3);
+  const pool = result.stars <= 0 ? CONSOLE : BY_STARS[tier];
   const line = (levelUpTo && LEVEL_UP[levelUpTo]) || pool[Math.floor(Math.random() * pool.length)];
   picked.set(result, line);
   return line;

@@ -1031,3 +1031,8 @@ body.is-dragging .buddy-figure, .buddy.is-hidden .buddy-figure { pointer-events:
 :is([data-theme="pastel-rainbow"], [data-theme="kraft-paper"]) .btn-danger { color: #b3261e; }
 
 .loading-note { font-size: 12px; color: var(--text-2); }
+
+/* Fix 1: label verdict next to the model label */
+.label-verdict { margin-left: 6px; padding: 1px 6px; border-radius: 999px; font-size: 11px; font-style: normal; font-weight: 700; white-space: nowrap; }
+.label-verdict.is-match { color: #0b1a10; background: #7cf0b5; }
+.label-verdict.is-close { color: var(--text-1); border: 1px solid #7cf0b5; }

@@ -43,7 +43,7 @@ export function RoundEffects() {
         setShow({ id: ++id, variant, heading: 'LEVEL UP!', sub: `LV ${s.levelUpTo} ・ ${titleFor(s.levelUpTo)}`, cheer });
       } else if (result.stars >= 1) {
         variant = 'clear';
-        setShow({ id: ++id, variant, heading: result.stars >= 3 ? 'PERFECT!' : 'CLEAR!', sub: null, cheer });
+        setShow({ id: ++id, variant, heading: result.correct === result.total ? 'PERFECT!' : 'CLEAR!', sub: null, cheer });
       }
       if (!variant) return;
       useGame.setState({ resultOpen: false });

@@ -248,6 +248,8 @@ export function ResultPanel() {
                   </span>
                   <span className="result-model">
                     模範: <b>{gt.modelLabel}</b>
+                    {gt.labelMatch === 'match' && <em className="label-verdict is-match">◎ 同じ意味</em>}
+                    {gt.labelMatch === 'close' && <em className="label-verdict is-close">○ 近い</em>}
                   </span>
                 </header>
                 <ul>
