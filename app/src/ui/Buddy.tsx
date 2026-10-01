@@ -80,7 +80,7 @@ function useDock(ref: React.RefObject<HTMLDivElement | null>) {
       if (!el || !stage) return;
       const dock = stacked.matches && stage.getBoundingClientRect().top < -DOCK_AFTER_PX;
       setDocked(dock);
-      el.classList.toggle('is-docked', dock); // now, so the figure is measured at its docked size
+      el.classList.toggle('is-docked', dock); // now, so the figure is measured where it docks
       if (!dock) return;
       // The 答え合わせ button (or, after the check, the row of buttons) is the submit bar's last child.
       const button = document.querySelector('.submit')?.lastElementChild;

@@ -1026,7 +1026,6 @@ body.is-dragging .buddy-figure, .buddy.is-hidden .buddy-figure { pointer-events:
   top: max(var(--dock-top, 8px), calc(env(safe-area-inset-top) + 8px));
   right: max(10px, env(safe-area-inset-right));
 }
-.buddy.is-docked .buddy-figure { width: 76px; height: 100px; }
 
 /* ---------- Save dialog: blocked loads + progress reset (danger zone) ---------- */
 .save-slot small { display: block; }
