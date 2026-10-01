@@ -4,8 +4,11 @@
 // It stays mounted (hidden with CSS) so the 3D model isn't rebuilt every round.
 // The block field keeps a column free for it (see buddyReservePx), so it stays visible without
 // covering blocks. "awake" only gates the speech bubble.
+// On narrow screens the trays stack under the stage; once the stage scrolls away, it follows down
+// and stands on the 答え合わせ button (or at the top of the screen past it) — see useDock.
 import { lazy, Suspense, useCallback, useEffect, useRef, useState } from 'react';
 import { currentCharacterIndex } from '../game/characters';
+import { dom } from '../game/runtime';
 import { useGame } from '../state/store';
 import type { Reaction } from '../game/BuddyScene';
 import { SafeBoundary } from './SafeBoundary';
@@ -55,6 +58,56 @@ function useTurn() {
   return { onPointerDown, onPointerMove, onPointerUp, onPointerCancel: onPointerUp };
 }
 
+/** Below this width the trays sit under the stage (matches the 900px breakpoint in styles.css). */
+const STACKED = '(max-width: 900px)';
+/** Dock once this much of the stage has scrolled above the screen (about half the character). */
+const DOCK_AFTER_PX = 110;
+
+/**
+ * Stacked layout: once the stage has scrolled away, the character leaves the stage and stands on
+ * the top-right of the 答え合わせ button; past the button it stays at the top of the screen.
+ * The position is written straight to the element (--dock-top), so scrolling doesn't re-render.
+ */
+function useDock(ref: React.RefObject<HTMLDivElement | null>) {
+  const [docked, setDocked] = useState(false);
+  useEffect(() => {
+    const stacked = window.matchMedia(STACKED);
+    let raf = 0;
+    const update = () => {
+      raf = 0;
+      const el = ref.current;
+      const stage = dom.stage;
+      if (!el || !stage) return;
+      const dock = stacked.matches && stage.getBoundingClientRect().top < -DOCK_AFTER_PX;
+      setDocked(dock);
+      el.classList.toggle('is-docked', dock); // now, so the figure is measured at its docked size
+      if (!dock) return;
+      // The 答え合わせ button (or, after the check, the row of buttons) is the submit bar's last child.
+      const button = document.querySelector('.submit')?.lastElementChild;
+      const figure = el.querySelector<HTMLElement>('.buddy-figure');
+      if (!button || !figure) return;
+      const top = button.getBoundingClientRect().top - figure.offsetHeight + 8; // feet just on the button
+      el.style.setProperty('--dock-top', `${Math.round(Math.min(top, window.innerHeight - figure.offsetHeight))}px`);
+    };
+    const schedule = () => {
+      if (!raf) raf = requestAnimationFrame(update);
+    };
+    schedule();
+    window.addEventListener('scroll', schedule, { passive: true });
+    window.addEventListener('resize', schedule);
+    stacked.addEventListener('change', schedule);
+    const unsub = useGame.subscribe(schedule); // the checklist above the button can change height
+    return () => {
+      cancelAnimationFrame(raf);
+      window.removeEventListener('scroll', schedule);
+      window.removeEventListener('resize', schedule);
+      stacked.removeEventListener('change', schedule);
+      unsub();
+    };
+  }, [ref]);
+  return docked;
+}
+
 type Say = { text: string; id: number } | null;
 
 /** What the character says, by situation. */
@@ -92,6 +145,8 @@ export function Buddy() {
   const shownIndex = useRef<number | null>(null);
   const [awake, setAwake] = useState(false);
   const turn = useTurn();
+  const root = useRef<HTMLDivElement>(null);
+  const docked = useDock(root);
   const sleepTimer = useRef(0);
 
   const wake = useCallback((ms: number) => {
@@ -158,6 +213,14 @@ export function Buddy() {
     if (changed) speak(LINES.newForm, 3200);
   }, [hidden, index, speak]);
 
+  // Pop in at the new spot when it docks below the stage or goes back up.
+  const wasDocked = useRef(docked);
+  useEffect(() => {
+    if (wasDocked.current === docked) return;
+    wasDocked.current = docked;
+    if (!hidden) react('appear');
+  }, [docked, hidden]);
+
   // Now and then, a word of encouragement while the player is working on the board.
   useEffect(() => {
     let last = -1;
@@ -176,7 +239,11 @@ export function Buddy() {
   }, [speak]);
 
   return (
-    <div className={`buddy${hidden ? ' is-hidden' : ''}${awake ? '' : ' is-resting'}`} aria-hidden="true">
+    <div
+      ref={root}
+      className={`buddy${hidden ? ' is-hidden' : ''}${docked ? ' is-docked' : ''}${awake ? '' : ' is-resting'}`}
+      aria-hidden="true"
+    >
       {say && !hidden && awake && (
         <p key={say.id} className="buddy-say">
           {say.text}

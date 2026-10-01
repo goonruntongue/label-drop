@@ -4,7 +4,7 @@ import { join, relative } from 'node:path';
 import { defineConfig, type Plugin } from 'vite';
 import react from '@vitejs/plugin-react';
 
-const PORT = 5173;
+const PORT = Number(process.env.PORT) || 5173;
 
 /** LAN URLs of this machine (IPv4, non-internal), so phones on the same network can open the dev server. */
 function lanUrls(): string[] {

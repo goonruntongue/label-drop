@@ -1019,6 +1019,15 @@ body.is-dragging .buddy { opacity: 0.35; }
 .buddy-figure:active { cursor: grabbing; }
 body.is-dragging .buddy-figure, .buddy.is-hidden .buddy-figure { pointer-events: none; }
 
+/* Stacked layout, stage scrolled away: it stands on the 答え合わせ button, or at the top of the screen
+   past it (--dock-top is set by Buddy.tsx while scrolling). */
+.buddy.is-docked {
+  position: fixed;
+  top: max(var(--dock-top, 8px), calc(env(safe-area-inset-top) + 8px));
+  right: max(10px, env(safe-area-inset-right));
+}
+.buddy.is-docked .buddy-figure { width: 76px; height: 100px; }
+
 /* ---------- Save dialog: blocked loads + progress reset (danger zone) ---------- */
 .save-slot small { display: block; }
 .save-slot-blocked { color: var(--warning); margin-top: 2px; }
