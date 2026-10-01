@@ -35,7 +35,7 @@ function useTurn() {
     last.current = { x: e.clientX, y: e.clientY, t: now, moved: last.current.moved + Math.abs(dx) + Math.abs(dy) };
     void scene().then(({ buddySpin, PITCH_MIN, PITCH_MAX }) => {
       buddySpin.yaw += dx * 0.014;
-      buddySpin.pitch = Math.min(PITCH_MAX, Math.max(PITCH_MIN, buddySpin.pitch + dy * 0.01));
+      buddySpin.pitch = Math.min(PITCH_MAX, Math.max(PITCH_MIN, buddySpin.pitch + dy * 0.013));
       buddySpin.vel = (dx * 0.014) / dtS;
       buddySpin.lastTouch = now;
     });

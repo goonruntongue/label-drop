@@ -16,8 +16,8 @@ export const buddyCue: { reaction: Reaction | null; at: number } = { reaction: n
 
 /** Player-controlled turn (drag / swipe): yaw (pan) with flick velocity, and pitch (tilt). */
 export const buddySpin = { yaw: 0, vel: 0, pitch: 0, dragging: false, lastTouch: 0 };
-export const PITCH_MIN = -0.45; // looking up at it
-export const PITCH_MAX = 0.55; // looking down on it
+export const PITCH_MIN = -0.9; // looking up at it (~50°)
+export const PITCH_MAX = 1.15; // looking down on it (~65°)
 
 export function cue(reaction: Reaction) {
   buddyCue.reaction = reaction;
