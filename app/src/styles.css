@@ -582,29 +582,49 @@ button, input, select { font: inherit; color: inherit; }
 .briefing-controls { margin: 0; padding-left: 18px; font-size: 12px; line-height: 1.7; color: var(--text-2); }
 .briefing-card .btn-primary { align-self: stretch; padding: 12px; font-size: 15px; }
 
-/* Brief card (while playing) */
-.brief-card {
+/* Brief card (while playing): expanded card ⇄ collapsed pill */
+.brief-card,
+.brief-pill {
   position: absolute;
   top: 12px;
   left: 12px;
   z-index: 4;
-  max-width: min(320px, calc(100% - 24px));
-  display: flex;
-  flex-direction: column;
-  gap: 2px;
-  padding: 8px 12px;
-  border-radius: 12px;
   border: 1px solid var(--line-soft);
   background: var(--glass);
   backdrop-filter: blur(10px);
-  text-align: left;
-  font-size: 12px;
-  line-height: 1.5;
   color: var(--text-2);
+}
+.brief-card {
+  max-width: min(320px, calc(100% - 24px));
+  display: flex;
+  flex-direction: column;
+  border-radius: 12px;
+  overflow: hidden;
+}
+.brief-card-head,
+.brief-card-body {
+  border: 0;
+  background: transparent;
+  text-align: left;
+  cursor: pointer;
+  color: inherit;
+}
+.brief-card-head { display: flex; align-items: center; justify-content: space-between; gap: 10px; padding: 8px 12px 2px; }
+.brief-card-body { display: flex; flex-direction: column; gap: 2px; padding: 2px 12px 10px; font-size: 12px; line-height: 1.5; }
+.brief-card-body b { font-size: 14px; color: var(--text-1); }
+.brief-card-body:hover b { color: var(--accent); }
+.brief-pill {
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+  padding: 7px 14px;
+  border-radius: 999px;
+  border-color: var(--line);
   cursor: pointer;
 }
-.brief-card b { font-size: 14px; color: var(--text-1); }
-.brief-card:hover { border-color: var(--accent); }
+.brief-pill:hover, .brief-card-head:hover .brief-pill-arrow { color: var(--accent); }
+.brief-pill-arrow { font-size: 11px; color: var(--accent); line-height: 1; }
+@media (pointer: coarse) { .brief-pill { min-height: 40px; } }
 
 /* Keyword meaning (hover / long-press) */
 .keyword-tip {

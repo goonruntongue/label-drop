@@ -1,5 +1,5 @@
 // One round of play: brief before starting, brief card while playing, keyword meanings, and the answer check.
-import { useEffect, type CSSProperties } from 'react';
+import { useEffect, useState, type CSSProperties } from 'react';
 import * as audio from '../audio';
 import { PROBLEMS } from '../data/problems';
 import { levelDef, MAX_LEVEL, STARS_TO_LEVEL_UP } from '../game/levels';
@@ -82,22 +82,68 @@ export function BriefingOverlay() {
   );
 }
 
-/** While playing: the brief stays in view (top-left), click to reopen the full brief. */
+const BRIEF_COLLAPSED_KEY = 'practice-ia:brief-collapsed';
+
+/** Collapsed by default on narrow screens (the brief was just read; blocks need the room). Remembered per device. */
+function initialCollapsed(): boolean {
+  try {
+    const saved = localStorage.getItem(BRIEF_COLLAPSED_KEY);
+    if (saved !== null) return saved === '1';
+  } catch {
+    // Non-critical.
+  }
+  return window.matchMedia('(max-width: 900px)').matches;
+}
+
+/**
+ * While playing: the brief stays in view (top-left). It folds into a small pill so it never hides blocks on
+ * phones; the expanded card's body reopens the full brief.
+ */
 export function BriefCard() {
   const open = useGame((s) => s.briefingOpen);
   const problemIndex = useGame((s) => s.problemIndex);
   const mode = useGame((s) => s.mode);
   const level = useGame((s) => s.level);
+  const [collapsed, setCollapsed] = useState(initialCollapsed);
   if (open) return null;
   const problem = PROBLEMS[problemIndex];
+  const tag = mode === 'level' ? `LV ${level} ・ お題` : 'お題';
+  const toggle = () => {
+    const next = !collapsed;
+    setCollapsed(next);
+    try {
+      localStorage.setItem(BRIEF_COLLAPSED_KEY, next ? '1' : '0');
+    } catch {
+      // Non-critical.
+    }
+  };
+
+  if (collapsed) {
+    return (
+      <button type="button" className="brief-pill" onClick={toggle} aria-expanded={false} title="お題を開く">
+        <span className="kicker">{tag}</span>
+        <span className="brief-pill-arrow" aria-hidden="true">
+          ▶
+        </span>
+      </button>
+    );
+  }
+
   return (
-    <button type="button" className="brief-card" onClick={() => useGame.getState().openBriefing()} title="お題をもう一度見る">
-      <span className="kicker">{mode === 'level' ? `LV ${level} ・ お題` : 'お題'}</span>
-      <b>{problem.title}</b>
-      <span>
-        {problem.brief.user}が、{problem.brief.scene}
-      </span>
-    </button>
+    <div className="brief-card">
+      <button type="button" className="brief-card-head" onClick={toggle} aria-expanded={true} title="お題をたたむ">
+        <span className="kicker">{tag}</span>
+        <span className="brief-pill-arrow" aria-hidden="true">
+          ▼
+        </span>
+      </button>
+      <button type="button" className="brief-card-body" onClick={() => useGame.getState().openBriefing()} title="お題をもう一度くわしく見る">
+        <b>{problem.title}</b>
+        <span>
+          {problem.brief.user}が、{problem.brief.scene}
+        </span>
+      </button>
+    </div>
   );
 }
 
