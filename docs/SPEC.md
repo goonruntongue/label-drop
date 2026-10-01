@@ -907,6 +907,11 @@ async function requireUser(ctx: ExecutionContext, env: Env) {
 
 ### 9.1 構成図
 
+> **実装（2026-10-02、P3）**: 画面（ポータルの静的ファイル）は Cloudflare Pages（と GitHub Pages）から配り、API は **独立した Worker `label-drop-api`**（`worker/`）にした。ゲームは API を別オリジンとして呼ぶ（CORS は `ALLOWED_ORIGINS` に書いた公開元と、開発用の localhost だけを許可）。下の図の「Static Assets」は使わない。
+> - API が無くても（未デプロイ・接続できない）、ゲームは内蔵の問題とローカル採点で遊べる。AI ENERGY メーターは「準備中」「接続なし」と表示する。
+> - `ADMIN_EMAILS` と `ANON_SALT` は secret（`wrangler secret put`）。リポジトリには書かない。
+> - AI ENERGY メーターは、PC ではヘッダー、スマホ（幅640px以下）では設定パネルの中に出す。
+
 ```
 Browser (Vite SPA)
   ├─ 3D Stage (three.js / R3F) ─┐

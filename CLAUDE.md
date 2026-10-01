@@ -3,7 +3,8 @@
 ## このリポジトリ
 
 - **Label Drop**（practice IA シリーズ）：情報アーキテクチャのグルーピングとラベリングを練習する 3D ゲーム。
-- アプリ本体は `app/`（Vite + React + React Three Fiber）。仕様は `docs/SPEC.md`。
+- アプリ本体は `app/`（Vite + React + React Three Fiber）。API は `worker/`（Cloudflare Worker＋D1、P3〜）。仕様は `docs/SPEC.md`。
+- Cloudflare は**無料プランのまま**使い、従量課金が起きるものは使わない（SPEC 8.1 の決定）。Cloudflare 上にリソースを作る前にユーザーに確認する。
 - `main` に push すると、GitHub Actions で GitHub Pages（https://goonruntongue.github.io/label-drop/app/ ）に自動デプロイされる。
 
 ## 開発場所と最終デプロイ先（必読）
@@ -20,4 +21,7 @@ npm --prefix app run dev        # 開発サーバー（LAN にも公開。ヘッ
 npm --prefix app run typecheck
 npm --prefix app run build
 npm --prefix app run icons      # app/icons/icon.svg から PWA アイコンを再生成
+npm --prefix worker run dev     # API（Cloudflare Worker）をローカルで起動（:8787、ローカルの D1）
+npm --prefix worker run db:local  # ローカルの D1 にマイグレーションを当てる
+npm --prefix worker test        # API のテスト（AUTH_MODE の両方）
 ```

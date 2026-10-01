@@ -13,6 +13,7 @@ import { BriefCard, BriefingOverlay, KeywordTip, ResultPanel } from './ui/Round'
 import { Celebration } from './ui/Celebration';
 import { DebugPanel } from './ui/DebugPanel';
 import { RoundEffects } from './ui/RoundEffects';
+import { useAi } from './api';
 import { Buddy } from './ui/Buddy';
 import { CharacterGallery, CharacterReveal } from './ui/Characters';
 import { Tutorial } from './ui/Tutorial';
@@ -82,6 +83,9 @@ export default function App() {
     void preloadFonts().then(() => setReady(true));
   }, []);
   useKeyboard();
+  useEffect(() => {
+    void useAi.getState().refresh(); // AI ENERGY: once at start (no polling)
+  }, []);
 
   return (
     <div className="app">
