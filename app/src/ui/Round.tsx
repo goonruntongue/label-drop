@@ -1,7 +1,8 @@
 // One round of play: brief before starting, brief card while playing, keyword meanings, and the answer check.
-import { useEffect, useState, type CSSProperties } from 'react';
+import { useState, type CSSProperties } from 'react';
 import * as audio from '../audio';
 import { PROBLEMS } from '../data/problems';
+import { cheerFor } from '../game/cheers';
 import { levelDef, MAX_LEVEL, STARS_TO_LEVEL_UP, titleFor } from '../game/levels';
 import { TRAY_GLYPHS, useGame } from '../state/store';
 import { THEMES } from '../theme/themes';
@@ -173,23 +174,17 @@ export function ResultPanel() {
   const levelUpTo = useGame((s) => s.levelUpTo);
   const theme = THEMES[useGame((s) => s.theme)];
 
-  useEffect(() => {
-    if (!result || !open) return;
-    audio.stars(result.stars);
-    if (levelUpTo) window.setTimeout(() => audio.fanfare(), 700);
-    // Only when a new result arrives.
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [result]);
-
   if (!result || !open) return null;
   const trayById = new Map(trays.map((t) => [t.id, t]));
   const { newRound, closeResult } = useGame.getState();
   const perfect = result.correct === result.total;
+  const cheer = cheerFor(result, levelUpTo);
 
   return (
     <div className="result" role="dialog" aria-modal="true" aria-label="答え合わせ">
       <div className="result-card">
         <p className="kicker">RESULT</p>
+        {cheer && <p className="result-cheer">{cheer}</p>}
         <div className="result-head">
           <Stars value={result.stars} size="lg" />
           <div>

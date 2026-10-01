@@ -256,6 +256,8 @@ export interface GameState {
   rounds: number;
   /** 👑 badge: how many times the Lv10 final exam was cleared. */
   clears: Clears;
+  /** Bumped on every answer check (not on loading a save), so effects play only for fresh results. */
+  submitSeq: number;
   /** The clear celebration is on screen. */
   celebrating: boolean;
   /** After the celebration: back to Lv1 with a fresh board (the badge stays). */
@@ -318,6 +320,7 @@ export const useGame = create<GameState>()((set, get) => {
     peek: null,
     saveSlots: initialSaveSlots,
     clears: loadClears(),
+    submitSeq: 0,
     celebrating: false,
 
     finishCelebration: () => {
@@ -393,6 +396,7 @@ export const useGame = create<GameState>()((set, get) => {
         rounds,
         clears,
         celebrating,
+        submitSeq: s.submitSeq + 1,
         selected: null,
         hintOpen: false,
       });

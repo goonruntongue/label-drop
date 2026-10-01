@@ -249,3 +249,9 @@ export function clack() {
   knock(a, 0, 1);
   knock(a, 0.055 + Math.random() * 0.02, 0.28);
 }
+
+/** Round clear: a quick shimmer of high bell-like tinkles. */
+export function sparkle() {
+  const notes = [1567.98, 2093, 2349.32, 2637.02, 3135.96, 2793.83];
+  notes.forEach((f, i) => tone(f * (0.98 + Math.random() * 0.04), 0.25, 'triangle', 0.035, 0.05 + i * 0.055));
+}

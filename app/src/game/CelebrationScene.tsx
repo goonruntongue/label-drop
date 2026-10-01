@@ -1,5 +1,7 @@
-// Clear celebration in 3D: two party poppers rise from the bottom corners, go "パーン",
-// and blow out glittering paper confetti; a gentle confetti rain keeps falling afterwards.
+// Celebrations in 3D, in three sizes (small → large):
+//  - clear:   a quick glittering confetti burst from the bottom (transparent, over the game)
+//  - levelup: two party poppers go "パーン" with cheers (transparent, over the game)
+//  - final:   the full show — poppers, cheers + applause, confetti rain, bloom, dark backdrop
 import { Canvas, useFrame, useThree } from '@react-three/fiber';
 import { Bloom, EffectComposer } from '@react-three/postprocessing';
 import { useMemo, useRef } from 'react';
@@ -9,7 +11,28 @@ import * as audio from '../audio';
 const PALETTE = ['#FFD54A', '#FFB300', '#45E5FF', '#FF7BAC', '#7CF0B5', '#B6A1FF', '#FF8A3D', '#FFFFFF'].map((c) => new THREE.Color(c));
 const MAX_CONFETTI = 900;
 const MAX_SPARKS = 160;
-const POP_AT = [1.0, 1.14]; // seconds after mount, left / right
+
+export type CelebrationVariant = 'clear' | 'levelup' | 'final';
+
+interface VariantConfig {
+  poppers: boolean; // show 3D party poppers (otherwise invisible emitters below the bottom edge)
+  popAt: [number, number]; // seconds after mount, left / right
+  burst: number; // confetti per emitter
+  sparks: number; // sparkles per emitter
+  speed: number;
+  spread: number;
+  rain: number; // confetti per second falling from the top afterwards
+  twinkle: boolean; // ambient twinkles over the screen
+  kick: number; // camera shake strength
+  transparent: boolean; // draw over the game (no backdrop, no bloom)
+  sound: 'sparkle' | 'cheer' | 'grand';
+}
+
+const VARIANTS: Record<CelebrationVariant, VariantConfig> = {
+  clear: { poppers: false, popAt: [0.05, 0.12], burst: 80, sparks: 20, speed: 1.15, spread: 0.55, rain: 0, twinkle: false, kick: 0, transparent: true, sound: 'sparkle' },
+  levelup: { poppers: true, popAt: [0.55, 0.66], burst: 200, sparks: 40, speed: 0.9, spread: 0.45, rain: 0, twinkle: false, kick: 0.6, transparent: true, sound: 'cheer' },
+  final: { poppers: true, popAt: [1.0, 1.14], burst: 340, sparks: 60, speed: 1, spread: 0.42, rain: 26, twinkle: true, kick: 1, transparent: false, sound: 'grand' },
+};
 const GRAVITY = 6.5;
 const DRAG = 1.9;
 
@@ -119,13 +142,18 @@ interface PopperDef {
   scale: number;
 }
 
-function usePoppers(): PopperDef[] {
+function usePoppers(v: VariantConfig): PopperDef[] {
   const { width, height } = useThree((s) => s.viewport);
   return useMemo(() => {
     const halfW = width / 2;
     const halfH = height / 2;
     const scale = THREE.MathUtils.clamp(halfW / 4.2, 0.55, 1);
     return [-1, 1].map((side) => {
+      if (!v.poppers) {
+        // Invisible emitters just below the bottom edge, fanning up and slightly inward.
+        const up = new THREE.Vector3(-side * 0.22, 1, 0.2).normalize();
+        return { base: new THREE.Vector3(side * halfW * 0.3, -halfH - 0.4, 0.5), dir: up, quat: new THREE.Quaternion(), scale };
+      }
       const dir = new THREE.Vector3(-side * 0.5, 0.82, 0.28).normalize();
       return {
         base: new THREE.Vector3(side * (halfW - 1.0 * scale), -halfH + 0.9 * scale, 0.5),
@@ -134,11 +162,12 @@ function usePoppers(): PopperDef[] {
         scale,
       };
     });
-  }, [width, height]);
+  }, [width, height, v]);
 }
 
-function Scene() {
-  const poppers = usePoppers();
+function Scene({ v }: { v: VariantConfig }) {
+  const POP_AT = v.popAt;
+  const poppers = usePoppers(v);
   const viewport = useThree((s) => s.viewport);
   const confettiRef = useRef<THREE.InstancedMesh>(null);
   const sparkRef = useRef<THREE.InstancedMesh>(null);
@@ -192,32 +221,35 @@ function Scene() {
     const mouth = p.base.clone().addScaledVector(p.dir, 0.95 * p.scale);
     const side = new THREE.Vector3().crossVectors(p.dir, new THREE.Vector3(0, 0, 1)).normalize();
     const up = new THREE.Vector3().crossVectors(side, p.dir).normalize();
-    for (let n = 0; n < 340; n++) {
+    for (let n = 0; n < v.burst; n++) {
       const a = rand(0, Math.PI * 2);
-      const r = Math.sqrt(Math.random()) * 0.42;
-      const v = p.dir
+      const r = Math.sqrt(Math.random()) * v.spread;
+      const vel = p.dir
         .clone()
         .addScaledVector(side, Math.cos(a) * r)
         .addScaledVector(up, Math.sin(a) * r)
         .normalize()
-        .multiplyScalar(rand(7, 16) * (0.75 + 0.25 * p.scale));
-      spawnConfetti(mouth, v, p.scale);
+        .multiplyScalar(rand(7, 16) * v.speed * (0.75 + 0.25 * p.scale));
+      spawnConfetti(mouth, vel, p.scale);
     }
-    for (let n = 0; n < 60; n++) {
-      const v = p.dir
+    for (let n = 0; n < v.sparks; n++) {
+      const vel = p.dir
         .clone()
         .add(new THREE.Vector3(rand(-0.5, 0.5), rand(-0.5, 0.5), rand(-0.3, 0.3)))
         .normalize()
-        .multiplyScalar(rand(4, 13));
-      spawnSpark(mouth, v);
+        .multiplyScalar(rand(4, 13) * v.speed);
+      spawnSpark(mouth, vel);
     }
     state.current.caps[k].copy(mouth);
     state.current.capVel[k].copy(p.dir).multiplyScalar(9).add(new THREE.Vector3(0, 2, 0));
-    audio.popper();
-    if (k === 0) {
-      audio.cheer(0.25);
-      audio.applause(0.35, 3.8);
+    if (v.sound === 'sparkle') {
+      if (k === 0) audio.sparkle();
+      return;
     }
+    audio.popper();
+    if (k !== 0) return;
+    audio.cheer(0.25);
+    audio.applause(0.35, v.sound === 'grand' ? 3.8 : 1.6);
   };
 
   useFrame((three, rawDt) => {
@@ -228,22 +260,23 @@ function Scene() {
 
     // Poppers: rise in, tremble with anticipation, recoil on the pop, then settle down.
     poppers.forEach((p, k) => {
+      const sinceP = t - POP_AT[k];
+      if (!s.popped[k] && sinceP >= 0) {
+        s.popped[k] = true;
+        pop(k);
+      }
       const g = popperRefs.current[k];
       if (!g) return;
-      const rise = THREE.MathUtils.clamp(t / 0.7, 0, 1);
+      const rise = THREE.MathUtils.clamp(t / Math.min(0.7, POP_AT[0] - 0.1), 0, 1);
       const ease = 1 - Math.pow(1 - rise, 3);
-      const sinceP = t - POP_AT[k];
-      const shake = sinceP < 0 && t > 0.6 ? Math.sin(t * 70) * 0.03 * (t - 0.6) : 0;
+      const shakeFrom = POP_AT[k] - 0.4;
+      const shake = sinceP < 0 && t > shakeFrom ? Math.sin(t * 70) * 0.075 * (t - shakeFrom) : 0;
       const recoil = sinceP >= 0 ? Math.exp(-sinceP * 9) * 0.35 * p.scale : 0;
       g.position.copy(p.base).addScaledVector(p.dir, -recoil);
       g.position.y += (ease - 1) * 3 + shake;
       g.position.x += shake;
       g.quaternion.copy(p.quat);
       g.scale.setScalar(p.scale * (1 + (sinceP >= 0 ? Math.exp(-sinceP * 12) * 0.18 : 0)));
-      if (!s.popped[k] && sinceP >= 0) {
-        s.popped[k] = true;
-        pop(k);
-      }
       const seal = sealRefs.current[k];
       if (seal) seal.visible = !s.popped[k];
       // Paper cap flies off after the pop.
@@ -277,21 +310,21 @@ function Scene() {
     });
 
     // Gentle confetti rain once the poppers went off.
-    if (t > POP_AT[0] + 0.6) {
-      s.rainAcc += dt * 26;
-      const v = new THREE.Vector3();
+    if (v.rain > 0 && t > POP_AT[0] + 0.6) {
+      s.rainAcc += dt * v.rain;
+      const drift = new THREE.Vector3();
       const at = new THREE.Vector3();
       while (s.rainAcc >= 1) {
         s.rainAcc -= 1;
         at.set(rand(-viewport.width / 2, viewport.width / 2), viewport.height / 2 + 0.4, rand(-1.5, 1.5));
-        spawnConfetti(at, v.set(rand(-0.4, 0.4), -rand(0.3, 1), 0), 0.9);
+        spawnConfetti(at, drift.set(rand(-0.4, 0.4), -rand(0.3, 1), 0), 0.9);
       }
     }
 
     // Camera nudge on the pop.
     const kick = POP_AT.reduce((m, at) => (t >= at ? m + Math.exp(-(t - at) * 10) : m), 0);
-    three.camera.position.x = Math.sin(t * 60) * 0.06 * kick;
-    three.camera.position.y = Math.cos(t * 53) * 0.06 * kick;
+    three.camera.position.x = Math.sin(t * 60) * 0.06 * kick * v.kick;
+    three.camera.position.y = Math.cos(t * 53) * 0.06 * kick * v.kick;
 
     // Confetti physics + glitter: brightness follows how squarely each piece faces the camera.
     const mesh = confettiRef.current;
@@ -361,7 +394,7 @@ function Scene() {
         sm.setMatrixAt(i, dummy.matrix);
       }
       // Ambient twinkles over the whole screen after the burst.
-      if (t > POP_AT[0] + 0.8 && Math.random() < dt * 6) {
+      if (v.twinkle && t > POP_AT[0] + 0.8 && Math.random() < dt * 6) {
         spawnSpark(new THREE.Vector3(rand(-viewport.width / 2, viewport.width / 2), rand(-viewport.height / 2, viewport.height / 2), rand(-1, 1)), new THREE.Vector3());
       }
       sm.instanceMatrix.needsUpdate = true;
@@ -370,16 +403,21 @@ function Scene() {
 
   return (
     <>
-      <color attach="background" args={['#050816']} />
-      <mesh position={[0, 0.6, -6]} scale={[viewport.width * 2.4, viewport.height * 2.4, 1]}>
-        <planeGeometry />
-        <meshBasicMaterial map={tex.glow} transparent depthWrite={false} />
-      </mesh>
+      {!v.transparent && (
+        <>
+          <color attach="background" args={['#050816']} />
+          <mesh position={[0, 0.6, -6]} scale={[viewport.width * 2.4, viewport.height * 2.4, 1]}>
+            <planeGeometry />
+            <meshBasicMaterial map={tex.glow} transparent depthWrite={false} />
+          </mesh>
+        </>
+      )}
       <ambientLight intensity={0.7} />
       <directionalLight position={[2, 5, 6]} intensity={2.2} />
       <directionalLight position={[-4, -2, 3]} intensity={0.6} color="#8fb8ff" />
 
-      {poppers.map((_, k) => (
+      {v.poppers &&
+        poppers.map((_, k) => (
         <group key={k}>
           <group ref={(el) => void (popperRefs.current[k] = el)}>
             {/* Cone body: apex at the bottom (string side), mouth facing the firing direction. */}
@@ -427,17 +465,26 @@ function Scene() {
         <meshBasicMaterial map={tex.star} color={[2.4, 2.2, 1.7]} transparent blending={THREE.AdditiveBlending} depthWrite={false} toneMapped={false} />
       </instancedMesh>
 
-      <EffectComposer multisampling={0}>
-        <Bloom mipmapBlur intensity={1.1} luminanceThreshold={0.85} luminanceSmoothing={0.2} />
-      </EffectComposer>
+      {!v.transparent && (
+        <EffectComposer multisampling={0}>
+          <Bloom mipmapBlur intensity={1.1} luminanceThreshold={0.85} luminanceSmoothing={0.2} />
+        </EffectComposer>
+      )}
     </>
   );
 }
 
-export default function CelebrationScene() {
+export default function CelebrationScene({ variant = 'final' }: { variant?: CelebrationVariant }) {
+  const v = VARIANTS[variant];
   return (
-    <Canvas className="celebration-canvas" dpr={[1, 2]} gl={{ antialias: true, stencil: false }} camera={{ position: [0, 0, 10], fov: 50 }} aria-hidden="true">
-      <Scene />
+    <Canvas
+      className="celebration-canvas"
+      dpr={[1, 2]}
+      gl={{ antialias: true, stencil: false, alpha: v.transparent }}
+      camera={{ position: [0, 0, 10], fov: 50 }}
+      aria-hidden="true"
+    >
+      <Scene v={v} />
     </Canvas>
   );
 }
