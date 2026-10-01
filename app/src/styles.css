@@ -1002,3 +1002,8 @@ button, input, select { font: inherit; color: inherit; }
 .char-slot-face { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; object-position: 50% 30%; }
 .char-slot-no { position: relative; }
 .char-slot:has(.char-slot-face) .char-slot-no { position: absolute; right: 2px; bottom: 0; font-size: 9px; text-shadow: 0 0 3px #000, 0 0 3px #000; }
+
+/* While solving: small, faint, out of the way; gone during a drag. */
+.buddy-figure { transform-origin: 100% 0; transition: transform 350ms var(--ease-out, ease-out), opacity 350ms ease; }
+.buddy.is-resting .buddy-figure { transform: scale(0.5); opacity: 0.4; }
+body.is-dragging .buddy { opacity: 0; }
