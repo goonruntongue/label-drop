@@ -10,6 +10,7 @@
 - 最新のアプリの変更: label-drop `7c70760`（`main`）。開発版の公開: https://goonruntongue.github.io/label-drop/app/
 - ポータルにも反映済み: knowledge-sorrounding-AI `main` の `c103071`（label-drop `7c70760` 時点）。
   公開: https://goonruntongue.github.io/knowledge-sorrounding-AI/about-ia/app/dist/
+- **ポータルは Cloudflare Pages でも公開**（2026-10-02〜、プロジェクト `knowledge-surrounding-ai`）: https://knowledge-surrounding-ai.pages.dev/ 。「ポータルに反映して」では GitHub の `main` と Cloudflare の両方を同じコミットにそろえる（`docs/PORTAL_DEPLOY.md` 3-5、ポータル側は `PORTAL_PUBLISH_RULES.md`）。
 
 ## 2. 守ること（ユーザーとの取り決め）
 

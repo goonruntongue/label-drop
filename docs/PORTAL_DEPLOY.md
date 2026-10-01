@@ -80,6 +80,26 @@ git push origin <確認したブランチ>
 ```
 
 - コミットメッセージに、元にした `label-drop` のコミットID を書いておくと、どの版を出したか追える。
+
+### 3-5. Cloudflare Pages にも上げる（2026-10-02 から。GitHub と必ず両方）
+
+ポータルは Cloudflare Pages（プロジェクト `knowledge-surrounding-ai`、https://knowledge-surrounding-ai.pages.dev/ ）でも公開している。今後の本番はこちら。
+`main` に push したら、**同じコミット**を Cloudflare に上げる（手元の作業中のファイルからは上げない）。
+
+```bash
+cd C:/Users/owner/Desktop/knowledge-sorrounding-AI
+git fetch origin
+SHA=$(git rev-parse origin/main)
+OUT=<空の一時フォルダ>
+git archive "$SHA" | tar -x -C "$OUT"
+rm -f "${OUT:?}/AGENTS.md"; rm -r "${OUT:?}/.codex"     # AI 向けのファイルは公開しない
+npx wrangler pages deploy "$OUT" --project-name knowledge-surrounding-ai --branch main   --commit-hash "$SHA" --commit-message "Deploy: $(git log -1 --format=%s "$SHA")"
+```
+
+- 確認: `/`、`/about-ia/`、`/about-ia/app/dist/` が開き、`about-ia/app/dist/index.html` が読む `assets/index-*.js` が新しいものになっていること。
+  - 404.html が無いので、存在しないパスはトップページ（200）が返る。ファイルが本当にあるかは、中身で確かめる。
+- Cloudflare は無料プランのまま使う。触ってよいのは `knowledge-surrounding-ai` だけ（同じアカウントの他のプロジェクトには触らない）。
+- 同じ手順は、ポータル側の AI（Codex）向けに `knowledge-sorrounding-AI/PORTAL_PUBLISH_RULES.md`（Git 管理外）にも書いてある。
 - push 後、ポータル上の `about-ia/app/` を開き、新しい版が表示されることを確認する（アプリの Service Worker は、オンラインなら常にネットから最新版を読み、オフラインのときだけ保存済みの版で動く。開き直せば反映される）。
 
 ## 4. 注意
