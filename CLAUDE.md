@@ -5,7 +5,7 @@
 - **Label Drop**（practice IA シリーズ）：情報アーキテクチャのグルーピングとラベリングを練習する 3D ゲーム。
 - アプリ本体は `app/`（Vite + React + React Three Fiber）。API は `worker/`（Cloudflare Worker＋D1、P3〜）。仕様は `docs/SPEC.md`。
 - Cloudflare は**無料プランのまま**使い、従量課金が起きるものは使わない（SPEC 8.1 の決定）。Cloudflare 上にリソースを作る前にユーザーに確認する。
-- `main` に push すると、GitHub Actions で GitHub Pages（https://goonruntongue.github.io/label-drop/app/ ）に自動デプロイされる。アプリはどの公開先でも**静的に動く**（AI 機能は `VITE_AI=on` のときだけ。既定は無効。2026-10-03 決定 #25）。お題は Claude が作って `app/src/data/` に入れる（Workers AI は使わない）。将来の教室モードの構想は `docs/CLASSROOM_SPEC.md`。
+- `main` に push すると、GitHub Actions で GitHub Pages（https://goonruntongue.github.io/label-drop/app/ ）に自動デプロイされる。アプリはどの公開先でも**静的に動く**（AI 機能は `VITE_AI=on` のときだけ。既定は無効。2026-10-03 決定 #25）。お題は Claude が作って `app/src/data/` に入れる（Workers AI は使わない）。作るときはローカルスキル `.claude/skills/label-drop-topic/SKILL.md` に従う。将来の教室モードの構想は `docs/CLASSROOM_SPEC.md`。
 
 ## 開発場所と最終デプロイ先（必読）
 
