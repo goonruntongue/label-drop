@@ -8,7 +8,8 @@
 - **Label Drop**（practice IA シリーズ）：IA のグルーピングとラベリングを練習する 3D ゲーム。
 - **P0〜P3 完了。P4（AI 作問）は 2026-10-03 に取りやめ**（決定事項 #25）。お題は Claude が作ってアプリに内蔵する。アプリは静的に動く。Worker/D1 は将来の教室モード（`docs/CLASSROOM_SPEC.md`）用に残し、Cron は停止。
 - 最新のアプリの変更は label-drop の `main`。どの公開先も静的な版（AI 機能は既定で無効。`VITE_AI=on` のときだけ有効）。
-- ポータルにも反映済み: knowledge-sorrounding-AI `main` の `7876fcc`（label-drop `514f5fa` 時点。まだ AI あり版）。GitHub Pages と Cloudflare Pages の両方。
+- ポータルにも反映済み: knowledge-sorrounding-AI `main` の `db9d94b`（label-drop `59e3d6d` 時点、静的な版・43問）。GitHub Pages と Cloudflare Pages の両方。
+- ポータル側の Codex 向け引き継ぎ: `knowledge-sorrounding-AI/CODEX_HANDOFF_LABEL_DROP.md`（Git 管理外。2026-10-03 作成）。
   公開: https://goonruntongue.github.io/knowledge-sorrounding-AI/about-ia/app/dist/
 - **ポータルは Cloudflare Pages でも公開**（2026-10-02〜、プロジェクト `knowledge-surrounding-ai`）: https://knowledge-surrounding-ai.pages.dev/ 。「ポータルに反映して」では GitHub の `main` と Cloudflare の両方を同じコミットにそろえる（`docs/PORTAL_DEPLOY.md` 3-5、ポータル側は `PORTAL_PUBLISH_RULES.md`）。
 
