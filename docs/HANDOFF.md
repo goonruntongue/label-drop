@@ -6,7 +6,7 @@
 ## 1. いまの状態
 
 - **Label Drop**（practice IA シリーズ）：IA のグルーピングとラベリングを練習する 3D ゲーム。
-- **AI を使わない範囲は、ほぼ完成**（仕様書の P0〜P2 相当）。AI（Cloudflare Workers AI）による出題・評価は未着手で、仕様だけ `docs/SPEC.md` にある（P3 以降）。
+- **P0〜P3 完了、P4（AI 作問）稼働中**（2026-10-02）。AI による評価（P5）は未着手。
 - 最新のアプリの変更は label-drop の `main`。https://goonruntongue.github.io/label-drop/app/ は **AI なし版**（`VITE_AI=off` でビルド。決定事項 #23）。AI あり版はポータル。
 - ポータルにも反映済み: knowledge-sorrounding-AI `main` の `4dd4b42`（label-drop `e7fb42d` 時点、AI あり版）。GitHub Pages と Cloudflare Pages の両方。
   公開: https://goonruntongue.github.io/knowledge-sorrounding-AI/about-ia/app/dist/
