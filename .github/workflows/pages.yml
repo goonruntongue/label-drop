@@ -32,9 +32,7 @@ jobs:
         working-directory: app
         run: npm ci
 
-      # This site (goonruntongue.github.io/label-drop) is the edition without AI, as decided 2026-10-02:
-      # every non-AI improvement, but no AI ENERGY meter, no API calls, no AI-made problems.
-      # The portal build (docs/PORTAL_DEPLOY.md) keeps AI.
+      # Static edition, no AI (decision #23, and since #25 every build is static by default).
       - name: Type-check and build (without AI)
         working-directory: app
         env:

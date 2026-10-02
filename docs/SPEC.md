@@ -1167,6 +1167,7 @@ D1の無料枠（読み取り500万行/日、書き込み10万行/日）はこ�
 | 22 | AI 作問の撤退条件 | **決定（2026-10-02）** | ゲームの質が下がる・おかしな問題が出る場合は、**AI 作問をやめ、Claude や Codex に問題を量産させてテンプレとしてハードコーディングする方式に切り替える**。品質チェック（7.2）の合格ラインは 0.6、作り置き（Cron）は 2026-10-02 に有効化 |
 | 23 | 公開先ごとの版 | **決定（2026-10-02）** | **ポータル（Cloudflare Pages・GitHub Pages）＝AI あり版**、**label-drop の GitHub Pages（goonruntongue.github.io/label-drop）＝AI なし版**（AI 以外の改善はすべて入った最新版。`VITE_AI=off` でビルドし、AI ENERGY メーター・API 通信・AI 作問を外す）。同じドメインのブラウザ保存を共有するため、AI なし版は保存された AI の問題を読み込まない |
 | 24 | AI 作問の監修制 | **決定（2026-10-03）** | 実際に遊ぶと、AI の問題は軸の混在・境目のあいまいさ・重複が目立ち、数値の品質チェックでは防げなかった。そこで **AI の生成物は下書き（status=draft）として保存し、出題しない**。**Claude が定期的に下書きを見て、手直しして公開（ready）するか不合格（rejected）にする**。手順: `npm --prefix worker run review:export` → `worker/review/curated/<日付>.json` に判定と修正版を書く → `review:apply -- <ファイル>`（同じ検査を通らないと何も書かない。`--dry-run` あり）。公開した問題はゲームで「AI 作問・監修済」と表示。その場での生成（`/api/generate`）は停止。作り置きは下書きを tier ごと10件までためるだけ。判定の履歴は `review/curated/` に残る |
+| 25 | AI を使わない（静的運用） | **決定（2026-10-03）** | **Workers AI は使わない**。お題は Claude が会話の中で作り、アプリに内蔵する（`app/src/data/topics-curated.ts` など）。監修済みだった AI 下書き13問もアプリへ移した。アプリは静的に動く（AI 機能は `VITE_AI=on` のときだけ。既定は無効）。作り置き（Cron）は停止。Worker と D1 は、将来の教室モード（`docs/CLASSROOM_SPEC.md`）のために残す |
 
 ---
 

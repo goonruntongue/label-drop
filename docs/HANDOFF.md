@@ -6,9 +6,9 @@
 ## 1. いまの状態
 
 - **Label Drop**（practice IA シリーズ）：IA のグルーピングとラベリングを練習する 3D ゲーム。
-- **P0〜P3 完了、P4（AI 作問）稼働中**（2026-10-02）。AI による評価（P5）は未着手。
-- 最新のアプリの変更は label-drop の `main`。https://goonruntongue.github.io/label-drop/app/ は **AI なし版**（`VITE_AI=off` でビルド。決定事項 #23）。AI あり版はポータル。
-- ポータルにも反映済み: knowledge-sorrounding-AI `main` の `4dd4b42`（label-drop `e7fb42d` 時点、AI あり版）。GitHub Pages と Cloudflare Pages の両方。
+- **P0〜P3 完了。P4（AI 作問）は 2026-10-03 に取りやめ**（決定事項 #25）。お題は Claude が作ってアプリに内蔵する。アプリは静的に動く。Worker/D1 は将来の教室モード（`docs/CLASSROOM_SPEC.md`）用に残し、Cron は停止。
+- 最新のアプリの変更は label-drop の `main`。どの公開先も静的な版（AI 機能は既定で無効。`VITE_AI=on` のときだけ有効）。
+- ポータルにも反映済み: knowledge-sorrounding-AI `main` の `7876fcc`（label-drop `514f5fa` 時点。まだ AI あり版）。GitHub Pages と Cloudflare Pages の両方。
   公開: https://goonruntongue.github.io/knowledge-sorrounding-AI/about-ia/app/dist/
 - **ポータルは Cloudflare Pages でも公開**（2026-10-02〜、プロジェクト `knowledge-surrounding-ai`）: https://knowledge-surrounding-ai.pages.dev/ 。「ポータルに反映して」では GitHub の `main` と Cloudflare の両方を同じコミットにそろえる（`docs/PORTAL_DEPLOY.md` 3-5、ポータル側は `PORTAL_PUBLISH_RULES.md`）。
 
@@ -61,3 +61,7 @@
   `performance.getEntriesByType('resource').map(e => e.name).filter(n => /state\/store\.ts/.test(n)).pop()` を `import()`。
 - `?debug` を URL に付けるとデバッグパネル（レベル・★の変更、レベルアップ演出のプレビュー、全クリア演出の再生、図鑑、👑の消去）。
 - コミットの末尾には `Co-Authored-By: Claude Opus 5.5 <noreply@anthropic.com>`。
+
+## 6. 2026-10-03 の方針転換
+- Workers AI の問題はあいまいだったため、監修制（#24）を経て、**AI を使わない**ことに決定（#25）。新しいお題は、ユーザーに頼まれたら Claude が作り、`app/src/data/topics-curated.ts` に足す（groups に altLabels を付ける。検査の基準は SPEC 7.2 と `worker/src/ai/validate.ts` と同じ：5グループ×6語、軸は1つ、重複なし、受け皿グループなし）。
+- 将来は教室モード（ログイン、講師の管理画面、チーム戦、リアルタイム同期とチャット、結果発表）。構想と仕様の下書きは `docs/CLASSROOM_SPEC.md`。

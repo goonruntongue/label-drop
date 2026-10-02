@@ -20,8 +20,8 @@
   // Local development: put AI_MOCK=1 in .dev.vars so `wrangler dev` never spends the allocation.
   "ai": { "binding": "AI" },
   // Pre-generation every 30 minutes (SPEC 8.4); only does work before the 09:00 JST reset or when stock is low.
-  // Turned on 2026-10-02 after the user checked real generated problems.
-  "triggers": { "crons": ["*/30 * * * *"] },
+  // Off since 2026-10-03: problems are written by Claude in the conversation; Workers AI is not used.
+  "triggers": { "crons": [] },
   "access": {
     // wrangler dev: pretend Cloudflare Access let this user in (only used when AUTH_MODE=access)
     "dev": { "aud": "label-drop-dev", "identity": { "email": "dev@example.com", "name": "Dev" } }

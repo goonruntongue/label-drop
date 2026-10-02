@@ -5,6 +5,7 @@
 import { EVERYDAY_EXTRA } from './topics-everyday';
 import { SERVICE_TOPICS } from './topics-service';
 import { WEB_EXTRA } from './topics-web';
+import { CURATED } from './topics-curated';
 import { LABEL_ALIASES } from './labelAliases';
 
 export interface Keyword {
@@ -519,7 +520,7 @@ const BASE: Problem[] = [
 const TIER_ORDER: Tier[] = ['everyday', 'service', 'web'];
 
 /** All 30 topics, ordered everyday → service → web. */
-export const PROBLEMS: Problem[] = [...BASE, ...EVERYDAY_EXTRA, ...SERVICE_TOPICS, ...WEB_EXTRA].sort(
+export const PROBLEMS: Problem[] = [...BASE, ...EVERYDAY_EXTRA, ...SERVICE_TOPICS, ...WEB_EXTRA, ...CURATED].sort(
   (a, b) => TIER_ORDER.indexOf(a.tier) - TIER_ORDER.indexOf(b.tier),
 );
 
@@ -528,6 +529,11 @@ export const TIER_LABELS: Record<Tier, string> = {
   service: '身近なサービス',
   web: 'Webサイト',
 };
+
+// Problems that carry their alternative labels (topics-curated.ts) register them for label matching.
+for (const p of CURATED) {
+  LABEL_ALIASES[p.id] ??= Object.fromEntries(p.groups.map((g) => [g.label, g.altLabels ?? []]));
+}
 
 /** Adds a problem (an AI-made one) to the list once, with its alternative labels; returns its index. */
 export function addProblem(p: Problem): number {

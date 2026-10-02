@@ -2,8 +2,12 @@
 // the bundled problems with local scoring. Only the AI ENERGY meter reads it for now (P3).
 import { create } from 'zustand';
 
-/** VITE_AI=off builds the edition without AI (the label-drop GitHub Pages site): no API at all. */
-export const AI_ENABLED = import.meta.env.VITE_AI !== 'off';
+/**
+ * AI features (meter, API calls, AI-made problems) are off unless the build sets VITE_AI=on.
+ * Since 2026-10-03 (decision #25) every build is static: problems are written by Claude and built in.
+ * The API and this code stay for later (classroom mode, docs/CLASSROOM_SPEC.md).
+ */
+export const AI_ENABLED = import.meta.env.VITE_AI === 'on';
 
 /** Where the API lives. Dev: `npm --prefix worker run dev` (port 8787); VITE_API_BASE overrides both.
  *  An empty value means "no API" and the meter says AI is being prepared. */
