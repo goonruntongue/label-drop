@@ -44,7 +44,7 @@
 ```bash
 cd C:/Users/owner/Desktop/Apps/IA-DX/app
 npm run typecheck
-npm run build
+npm run build      # ポータルは AI あり版。VITE_AI=off を付けない（それは label-drop の GitHub Pages 用）
 ```
 
 `label-drop` に push し、公開版（GitHub Pages）で動作を確認しておく。

@@ -8,6 +8,7 @@ import { useFace } from '../game/faces';
 import { DeviceButton } from './DevicePanel';
 import { SettingsPanel } from './Overlays';
 import { AiEnergyMeter, AiEnergySection } from './AiEnergy';
+import { AI_ENABLED } from '../api';
 import { useDialog } from './useDialog';
 
 const ICONS = {
@@ -332,9 +333,11 @@ export function Header() {
           <i style={{ width: `${total ? (done / total) * 100 : 0}%` }} />
         </span>
       </div>
-      <span className="hud-wide">
-        <AiEnergyMeter />
-      </span>
+      {AI_ENABLED && (
+        <span className="hud-wide">
+          <AiEnergyMeter />
+        </span>
+      )}
       <div className="hud-actions">
         <button type="button" className="btn btn-gallery hud-wide" title="魔法使い図鑑（キャラクター）" onClick={openGallery}>
           {mode === 'free' ? <Face className="hud-face is-small" /> : null}
@@ -406,7 +409,7 @@ export function Header() {
           </button>
           <DeviceButton />
         </div>
-        <AiEnergySection />
+        {AI_ENABLED && <AiEnergySection />}
       </SettingsPanel>
       {saveOpen && <SaveSlots onClose={() => setSaveOpen(false)} />}
     </header>

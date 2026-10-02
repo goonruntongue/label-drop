@@ -2,7 +2,7 @@
 // together with its answer, and the game plays and checks it exactly like a bundled template.
 // One problem is fetched ahead for the next level-mode board; if none arrives in time, the board is
 // a template as before. Recent ones stay in this browser so a save slot can reopen its board.
-import { API_BASE } from './api';
+import { AI_ENABLED, API_BASE } from './api';
 import { addProblem, PROBLEMS, type Problem, type Tier } from './data/problems';
 import { FONT_JP } from './game/textTexture';
 
@@ -25,8 +25,9 @@ function writeCache(list: Problem[]) {
   }
 }
 
-// Problems seen before rejoin the list at startup (save slots refer to them by id).
-for (const p of readCache()) addProblem(p);
+// Problems seen before rejoin the list at startup (save slots refer to them by id). Not in the edition
+// without AI: it shares this browser storage with the portal's AI edition on the same domain.
+if (AI_ENABLED) for (const p of readCache()) addProblem(p);
 
 /** Fetched and not played yet. */
 const ready: number[] = [];

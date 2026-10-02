@@ -2,10 +2,13 @@
 // the bundled problems with local scoring. Only the AI ENERGY meter reads it for now (P3).
 import { create } from 'zustand';
 
+/** VITE_AI=off builds the edition without AI (the label-drop GitHub Pages site): no API at all. */
+export const AI_ENABLED = import.meta.env.VITE_AI !== 'off';
+
 /** Where the API lives. Dev: `npm --prefix worker run dev` (port 8787); VITE_API_BASE overrides both.
  *  An empty value means "no API" and the meter says AI is being prepared. */
 const PROD_API = 'https://label-drop-api.goonruntongue.workers.dev';
-export const API_BASE: string = (import.meta.env.VITE_API_BASE as string | undefined) ?? (import.meta.env.DEV ? 'http://localhost:8787' : PROD_API);
+export const API_BASE: string = !AI_ENABLED ? '' : ((import.meta.env.VITE_API_BASE as string | undefined) ?? (import.meta.env.DEV ? 'http://localhost:8787' : PROD_API));
 
 export type AiMode = 'full' | 'saver' | 'offline';
 
