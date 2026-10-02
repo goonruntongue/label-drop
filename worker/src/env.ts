@@ -22,6 +22,11 @@ export interface Env {
   AI_MOCK?: string;
   /** Share of keywords that must sit closest to their own group (leave-one-out) in the embedding check (SPEC 7.2 ④). */
   QA_MIN_COHESION?: string;
+  /**
+   * "review" (default, decided 2026-10-03): generated problems are saved as drafts and only reach
+   * players after Claude has reviewed and fixed them (scripts/review-*.mjs). "auto": straight to ready.
+   */
+  PUBLISH_MODE?: 'review' | 'auto';
   /** Secret salt for anonymous ids (`wrangler secret put ANON_SALT`); a fixed fallback is used when unset. */
   ANON_SALT?: string;
 }

@@ -12,7 +12,9 @@
     "seed": "node scripts/seed-templates.mjs",
     "seed:local": "node scripts/seed-templates.mjs && wrangler d1 execute DB --local --file seed/templates.sql",
     "seed:remote": "node scripts/seed-templates.mjs && wrangler d1 execute DB --remote --file seed/templates.sql",
-    "generate:remote": "node scripts/generate-remote.mjs"
+    "generate:remote": "node scripts/generate-remote.mjs",
+    "review:export": "node scripts/review-export.mjs",
+    "review:apply": "node scripts/review-apply.mjs"
   },
   "dependencies": {
     "hono": "^4.13.12",

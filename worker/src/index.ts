@@ -69,6 +69,8 @@ app.post('/api/problem/ai', async (c) => {
 // On-demand generation (SPEC 9.4 /api/generate): FULL energy only, per-player quota and rate limit.
 app.post('/api/generate', async (c) => {
   const user = await requireUser(c);
+  // Under review (the default), an on-the-spot problem would reach a player unreviewed: closed.
+  if (c.env.PUBLISH_MODE !== 'auto') throw new HttpError(403, 'Generated problems are reviewed before play: on-demand generation is off');
   const body = ((await c.req.json().catch(() => ({}))) ?? {}) as { tier?: unknown; theme?: unknown };
   if (!TIERS.includes(body.tier as Tier)) throw new HttpError(400, 'tier must be everyday, service or web');
   if (body.theme !== undefined && (typeof body.theme !== 'string' || body.theme.length > 30)) throw new HttpError(400, 'theme must be up to 30 characters');

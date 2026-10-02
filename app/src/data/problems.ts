@@ -26,6 +26,8 @@ export interface Problem {
   groups: { label: string; items: Keyword[]; altLabels?: string[] }[];
   /** Set on problems made by the AI (they join the list at runtime, see aiProblems.ts). */
   source?: 'ai';
+  /** AI problems reach players only after Claude has reviewed and fixed them (since 2026-10-03). */
+  reviewed?: boolean;
 }
 
 const k = (text: string, desc: string): Keyword => ({ text, desc });

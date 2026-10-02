@@ -1,5 +1,6 @@
 // The generation pipeline (SPEC 7.2): draw → reserve budget → generate → check (one retry with the
-// problems listed) → embedding check → save as a ready problem. Every AI call is recorded, and the
+// problems listed) → embedding check → save — as a draft for Claude's review (PUBLISH_MODE=review,
+// the default since 2026-10-03), or ready to play (auto). Every AI call is recorded, and the
 // reservation is settled with what the call really cost.
 import { markExhausted, recordCall, reserve, settle } from '../budget';
 import type { Env } from '../env';
@@ -97,9 +98,9 @@ export async function generateProblem(env: Env, opts: { tier: Tier; theme?: stri
   const itemsHash = await sha256Hex(texts.map(normalize).sort().join('\n'));
   const saved = await env.DB.prepare(
     `INSERT OR IGNORE INTO problems (id, source, difficulty, domain, scheme, body, items_hash, qa_cohesion, status, created_at)
-     VALUES (?1, 'ai', ?2, ?3, ?4, ?5, ?6, ?7, 'ready', ?8)`,
+     VALUES (?1, 'ai', ?2, ?3, ?4, ?5, ?6, ?7, ?9, ?8)`,
   )
-    .bind(id, params.tier, params.domain, params.scheme.id, JSON.stringify(body), itemsHash, cohesion, new Date().toISOString())
+    .bind(id, params.tier, params.domain, params.scheme.id, JSON.stringify(body), itemsHash, cohesion, new Date().toISOString(), env.PUBLISH_MODE === 'auto' ? 'ready' : 'draft')
     .run();
   if (!saved.meta.changes) return { ok: false, reason: 'duplicate' };
   return { ok: true, id, cohesion };

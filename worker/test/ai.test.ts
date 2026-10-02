@@ -68,7 +68,8 @@ function fakeAi(replies: Reply[], embed: (texts: string[]) => number[][] = vecto
   return ai;
 }
 
-const envWith = (ai: ReturnType<typeof fakeAi>, vars: Partial<Env> = {}): Env => ({ ...base, AI_MOCK: '0', ...vars, AI: ai as unknown as Ai });
+// Most tests run the pipeline in "auto" mode; the review mode (the default) has its own tests below.
+const envWith = (ai: ReturnType<typeof fakeAi>, vars: Partial<Env> = {}): Env => ({ ...base, AI_MOCK: '0', PUBLISH_MODE: 'auto', ...vars, AI: ai as unknown as Ai });
 
 describe('checking a generated problem', () => {
   it('accepts the fixture', () => {
@@ -257,5 +258,32 @@ describe('POST /api/problem/ai (option A: with the answer)', () => {
     expect(problem.id.startsWith('ai:')).toBe(true);
     expect(problem.groups).toHaveLength(5);
     expect(problem.groups[0].altLabels.length).toBeGreaterThan(0);
+  });
+});
+
+describe('review mode (the default since 2026-10-03)', () => {
+  const ctx = { waitUntil() {}, passThroughOnException() {}, props: {} } as unknown as ExecutionContext;
+  const reviewEnv = (ai: ReturnType<typeof fakeAi>) => envWith(ai, { PUBLISH_MODE: undefined });
+
+  it('saves generated problems as drafts, which are never served', async () => {
+    const out = await generateProblem(reviewEnv(fakeAi([JSON.stringify(variant(30))])), { tier: 'everyday', userId: null });
+    expect(out.ok).toBe(true);
+    const row = await base.DB.prepare("SELECT status FROM problems WHERE source = 'ai'").first<{ status: string }>();
+    expect(row?.status).toBe('draft');
+    const res = await app.request('/api/problem/ai', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: '{"tiers":["everyday"]}' }, base, ctx);
+    expect(res.status).toBe(404);
+  });
+
+  it('closes on-demand generation', async () => {
+    const res = await app.request('/api/generate', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: '{"tier":"everyday"}' }, reviewEnv(fakeAi([])), ctx);
+    expect(res.status).toBe(403);
+  });
+
+  it('keeps only a small pile of drafts', async () => {
+    const env = reviewEnv(fakeAi([40, 41, 42, 43].map((n) => JSON.stringify(variant(n)))));
+    const out = await pregenerate(env, new Date(`${today()}T22:00:00Z`));
+    expect(out.filter((o) => o.ok)).toHaveLength(3);
+    const n = await base.DB.prepare("SELECT COUNT(*) AS n FROM problems WHERE source = 'ai' AND status = 'draft'").first<{ n: number }>();
+    expect(n?.n).toBe(3);
   });
 });

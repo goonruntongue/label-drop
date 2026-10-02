@@ -1,19 +1,22 @@
-// Pre-generation (SPEC 8.4), every 30 minutes. The free allocation can't be carried over, so in the
-// last hours before the reset (JST 06:00–08:59) leftover energy above 12% becomes problems in stock;
-// at other times only an almost empty stock (< 3 unplayed per tier) is topped up, one at a time.
+// Pre-generation (SPEC 8.4), every 30 minutes. Since 2026-10-03 it makes raw drafts for Claude's review
+// (PUBLISH_MODE=review): the stock it fills is the pile of drafts waiting for review, kept small.
+// In the last hours before the reset (JST 06:00–08:59) leftover energy above 12% tops the pile up to
+// POOL_TARGET per tier; at other times only a pile under POOL_MIN gets one more, one at a time.
 // A run makes at most a few problems: the free plan keeps each invocation short.
 import { budgetStatus } from './budget';
 import type { Env } from './env';
 import { generateProblem, type GenOutcome } from './ai/generate';
 import { TIERS, type Tier } from './problems';
 
-export const POOL_TARGET = 30; // unplayed AI problems per tier, before the reset
+export const POOL_TARGET = 10; // drafts waiting for review per tier (unplayed ready ones in auto mode)
 export const POOL_MIN = 3;
 const MAX_PER_RUN = 3;
 
 async function stock(env: Env): Promise<Record<Tier, number>> {
   const rows = await env.DB.prepare(
-    "SELECT difficulty AS tier, COUNT(*) AS n FROM problems WHERE source = 'ai' AND status = 'ready' AND play_count = 0 GROUP BY difficulty",
+    env.PUBLISH_MODE === 'auto'
+      ? "SELECT difficulty AS tier, COUNT(*) AS n FROM problems WHERE source = 'ai' AND status = 'ready' AND play_count = 0 GROUP BY difficulty"
+      : "SELECT difficulty AS tier, COUNT(*) AS n FROM problems WHERE source = 'ai' AND status = 'draft' GROUP BY difficulty",
   ).all<{ tier: Tier; n: number }>();
   const out = Object.fromEntries(TIERS.map((t) => [t, 0])) as Record<Tier, number>;
   for (const r of rows.results) if (r.tier in out) out[r.tier] = r.n;

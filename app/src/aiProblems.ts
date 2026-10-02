@@ -27,7 +27,12 @@ function writeCache(list: Problem[]) {
 
 // Problems seen before rejoin the list at startup (save slots refer to them by id). Not in the edition
 // without AI: it shares this browser storage with the portal's AI edition on the same domain.
-if (AI_ENABLED) for (const p of readCache()) addProblem(p);
+// Unreviewed ones (served before 2026-10-03) are dropped.
+if (AI_ENABLED) {
+  const reviewed = readCache().filter((p) => p.reviewed);
+  writeCache(reviewed);
+  for (const p of reviewed) addProblem(p);
+}
 
 /** Fetched and not played yet. */
 const ready: number[] = [];
@@ -50,7 +55,7 @@ export async function prefetchAi(tiers: Tier[]): Promise<void> {
     });
     if (!res.ok) return; // 404 = no stock yet
     const { problem } = (await res.json()) as { problem: Problem };
-    if (!problem?.id || !Array.isArray(problem.groups) || !problem.groups.length) return;
+    if (!problem?.id || !Array.isArray(problem.groups) || !problem.groups.length || !problem.reviewed) return;
     const p: Problem = { ...problem, source: 'ai' };
     // Block textures are drawn once: the glyphs of its keywords must be loaded first (as App does at start).
     if (document.fonts) {

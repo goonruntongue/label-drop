@@ -51,7 +51,11 @@ export function BriefingOverlay() {
         )}
         <h2>
           {problem.title}
-          {problem.source === 'ai' && <span className="ai-made" title="AI が作った問題です">AI 作問</span>}
+          {problem.source === 'ai' && (
+            <span className="ai-made" title="AI が作り、Claude が手直しした問題です">
+              AI 作問・監修済
+            </span>
+          )}
         </h2>
         <dl className="brief-rows">
           <div>
@@ -114,7 +118,7 @@ export function BriefCard() {
   const [collapsed, setCollapsed] = useState(initialCollapsed);
   if (open) return null;
   const problem = PROBLEMS[problemIndex];
-  const tag = `${mode === 'level' ? `LV ${level} ・ お題` : 'お題'}${problem.source === 'ai' ? ' ・ AI 作問' : ''}`;
+  const tag = `${mode === 'level' ? `LV ${level} ・ お題` : 'お題'}${problem.source === 'ai' ? ' ・ AI 作問・監修済' : ''}`;
   const toggle = () => {
     const next = !collapsed;
     setCollapsed(next);
