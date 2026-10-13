@@ -39,6 +39,18 @@
         "8787"
       ],
       "port": 8787
+    },
+    {
+      "name": "matomate",
+      "runtimeExecutable": "npm",
+      "runtimeArgs": [
+        "--prefix",
+        "Matomate/app",
+        "run",
+        "dev"
+      ],
+      "port": 5180,
+      "autoPort": true
     }
   ]
 }

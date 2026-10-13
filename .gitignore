@@ -7,3 +7,6 @@ Thumbs.db
 .env.*
 .claude/settings.local.json
 .wrangler/
+
+# Mato mate lives here as its own repository (github.com/goonruntongue/matomate)
+Matomate/

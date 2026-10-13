@@ -5,7 +5,7 @@ import { create } from 'zustand';
 /**
  * AI features (meter, API calls, AI-made problems) are off unless the build sets VITE_AI=on.
  * Since 2026-10-03 (decision #25) every build is static: problems are written by Claude and built in.
- * The API and this code stay for later (classroom mode, docs/CLASSROOM_SPEC.md).
+ * The API and this code stay in case AI features return. Classroom mode moved to Mato mate (decision #28).
  */
 export const AI_ENABLED = import.meta.env.VITE_AI === 'on';
 

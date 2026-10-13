@@ -33,7 +33,7 @@
   - **Cron は停止**（`wrangler.jsonc` の `triggers.crons` が空。Cloudflare 側のトリガーも削除済み）。
   - secret: `ADMIN_EMAILS`、`ANON_SALT`。
   - 2026-10-03、Worker 本体の最後の再デプロイは、このパソコンのメモリ不足で `npm test` が起動できず止まった（コードは無関係）。公開中の版は「生成は下書きのみ・`/api/generate` 停止」の版で、運用に支障はない。次に Worker を触るときに `npm --prefix worker run deploy` で入れ直す。
-- 教室モード（将来）：ログイン、講師の管理画面、チーム戦（共有盤面・チームチャット・未／済バッジ）、結果発表、管理者なしの「セルフモード」。仕様の下書きは **`docs/CLASSROOM_SPEC.md`**。Durable Objects（無料プランで可）＋自前の Google OAuth を推奨。
+- 教室モード：2026-10-13 に方針を変更。旧仕様（みんなでラベル、`docs/CLASSROOM_SPEC.md`）は破棄し、教室モードは **Mato mate（マトメイト）** という別リポジトリ（`Matomate/`、https://github.com/goonruntongue/matomate ）で作る。仕様は `Matomate/PRD.md`。バックエンドは Firebase。
 
 ## 4. 10-01 以降の経緯（主なもの）
 
@@ -45,9 +45,6 @@
 ## 5. 次の候補
 
 - 新しいお題を作って足す（頼まれたら）。
-- 教室モードの論点を決める（`docs/CLASSROOM_SPEC.md` の 7）。決まったら段階1（ログインと部屋）から。
-  - 2026-10-03：目的と課題の進め方を決めた（CLASSROOM_SPEC の 0、SPEC #26：固定課題→発表→自由課題→発表、教室モードはレベルアップなし）。同日、7.0・7.1 の論点もすべて決定（別アプリ「みんなでラベル」、`classroom/` に `app/` をコピーして育てる、SPEC #27）。次は段階1（ログインと部屋）から。
-  - 教室モード用にお題を作り直す（ローカルスキル `.claude/skills/label-drop-topic/SKILL.md` の 5）。
 - GitHub Pages 版のポータルを止めるかどうか（Cloudflare 版で問題がないと確かめてから）。
 
 ## 6. 開発のコツ
