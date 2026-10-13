@@ -1,0 +1,209 @@
+// Opening: the title, then (the first time, or when replayed from the settings) a short story of what
+// information architecture is, then the two things this game makes you practise, then the game.
+// White mincho type on black, typed out line by line. A tap, Enter or Space moves on; "スキップ" or Esc
+// goes straight to the game. Later visits show the title for a second and get out of the way.
+//
+// Each story scene may have a picture behind the text: public/intro/scene-1.webp … scene-5.webp.
+// They are optional. A scene whose picture is missing is simply black.
+import { useCallback, useEffect, useRef, useState } from 'react';
+import { useGame } from '../state/store';
+
+const SEEN_KEY = 'practice-ia:intro-seen';
+const TYPE_MS = 62;
+/** How long a finished scene stays before the next one comes by itself. */
+const HOLD_MS = 2600;
+const TITLE_MS = 1300;
+const CATCH_MS = 3600;
+const FADE_MS = 500;
+
+/**
+ * The story, two lines to a scene at most. `|` marks where a line may wrap on a narrow screen:
+ * a phrase is never broken in the middle (no 「情報アーキ／テクチャ」).
+ */
+const STORY: string[][] = [
+  ['世界は、|情報で|あふれている。'],
+  ['欲しいものは、|どこかにある。', 'なのに、|見つからない。'],
+  ['悪いのは、|探す人ではない。', '分け方と、|名前だ。'],
+  ['使う人のために、|情報を分け、|名前を付ける。', 'その設計を、|情報アーキテクチャ|― IA と呼ぶ。'],
+  ['良い分け方は、|人を迷わせない。', '良い名前は、|開ける前に|中身を伝える。'],
+];
+const plain = (line: string) => line.replaceAll('|', '');
+
+function seenBefore(): boolean {
+  try {
+    return localStorage.getItem(SEEN_KEY) === '1';
+  } catch {
+    return false;
+  }
+}
+
+/** Scenes: 0 = title, 1..STORY.length = story, last = the catch phrase. */
+const CATCH = STORY.length + 1;
+
+export function Intro() {
+  const open = useGame((s) => s.introOpen);
+  const replay = useGame((s) => s.introReplay);
+  const still = useGame((s) => s.prefs.motion !== 'full');
+  // Decided once per showing: the whole story the first time (or on replay, or with ?intro), else just the title.
+  const [full] = useState(() => replay || !seenBefore() || new URLSearchParams(location.search).has('intro'));
+  const [scene, setScene] = useState(0);
+  const [typed, setTyped] = useState(0);
+  const [leaving, setLeaving] = useState(false);
+  const root = useRef<HTMLDivElement>(null);
+
+  const lines = scene >= 1 && scene < CATCH ? STORY[scene - 1] : [];
+  const total = plain(lines.join('')).length;
+  const done = typed >= total;
+
+  const finish = useCallback(() => {
+    if (leaving) return;
+    setLeaving(true);
+    try {
+      localStorage.setItem(SEEN_KEY, '1');
+    } catch {
+      // Non-critical: the story will simply play again next time.
+    }
+    window.setTimeout(() => useGame.getState().closeIntro(), FADE_MS);
+  }, [leaving]);
+
+  const next = useCallback(() => {
+    if (leaving) return;
+    if (!full || scene >= CATCH) {
+      finish();
+      return;
+    }
+    setTyped(0);
+    setScene(scene + 1);
+  }, [finish, full, leaving, scene]);
+
+  /** A tap: finish the line being typed, or go to the next scene. */
+  const advance = useCallback(() => {
+    if (scene >= 1 && scene < CATCH && !done) setTyped(total);
+    else next();
+  }, [done, next, scene, total]);
+
+  // Typing.
+  useEffect(() => {
+    if (!open || leaving || scene < 1 || scene >= CATCH || done) return;
+    if (still) {
+      setTyped(total); // motion setting: no typing, the whole scene at once
+      return;
+    }
+    const id = window.setTimeout(() => setTyped((n) => n + 1), TYPE_MS);
+    return () => window.clearTimeout(id);
+  }, [open, leaving, scene, typed, done, total, still]);
+
+  // Scenes move on by themselves.
+  useEffect(() => {
+    if (!open || leaving) return;
+    const wait = scene === 0 ? TITLE_MS : scene >= CATCH ? CATCH_MS : done ? HOLD_MS : 0;
+    if (!wait) return;
+    const id = window.setTimeout(next, wait);
+    return () => window.clearTimeout(id);
+  }, [open, leaving, scene, done, next]);
+
+  // Keys belong to the opening while it is up (the game underneath has shortcuts of its own).
+  useEffect(() => {
+    if (!open) return;
+    root.current?.focus({ preventScroll: true });
+    const onKey = (e: KeyboardEvent) => {
+      e.stopPropagation();
+      if (e.key === 'Escape') finish();
+      else if (e.key === 'Enter' || e.key === ' ') {
+        // The skip button handles its own Enter / Space.
+        if ((e.target as HTMLElement | null)?.closest('button')) return;
+        e.preventDefault();
+        advance();
+      } else if (e.key !== 'Tab') e.preventDefault();
+    };
+    document.addEventListener('keydown', onKey, true);
+    return () => document.removeEventListener('keydown', onKey, true);
+  }, [open, advance, finish]);
+
+  if (!open) return null;
+
+  // Characters typed so far, dealt out phrase by phrase. The caret sits right after the last typed character.
+  let before = 0;
+  let caretPlaced = false;
+  const typedLines = lines.map((line) =>
+    line.split('|').map((phrase) => {
+      const shown = phrase.slice(0, Math.max(0, typed - before));
+      before += phrase.length;
+      const caret = !caretPlaced && typed <= before;
+      if (caret) caretPlaced = true;
+      return { shown, rest: phrase.slice(shown.length), caret };
+    }),
+  );
+
+  return (
+    <div
+      ref={root}
+      className={`intro${leaving ? ' is-leaving' : ''}`}
+      role="dialog"
+      aria-modal="true"
+      aria-label="オープニング"
+      tabIndex={-1}
+      onClick={(e) => {
+        if (!(e.target as HTMLElement).closest('button')) advance();
+      }}
+    >
+      {scene === 0 && (
+        <div className="intro-title" key="title">
+          <p className="intro-kicker">practice IA</p>
+          <h1>
+            Label <span>Drop</span>
+          </h1>
+          <p className="intro-sub">仕分けて、名付ける。</p>
+        </div>
+      )}
+
+      {scene >= 1 && scene < CATCH && (
+        <div className="intro-story" key={scene}>
+          {/* The still picture is kept moving (Ken Burns: a slow zoom and pan, different for each scene).
+              Optional: a missing file is hidden, not shown as broken. */}
+          <img className={`intro-art is-kb${scene}`} src={`./intro/scene-${scene}.webp`} alt="" draggable={false} onError={(e) => (e.currentTarget.hidden = true)} />
+          {/* The whole text is laid out from the start (invisible), so lines don't jump as they are typed. */}
+          <p className="intro-lines" aria-hidden="true">
+            {typedLines.map((phrases, i) => (
+              <span key={i} className="intro-line">
+                {phrases.map((p, k) => (
+                  <span key={k} className="intro-phrase">
+                    {p.shown}
+                    {p.caret && <i className="intro-caret" />}
+                    <span className="intro-rest">{p.rest}</span>
+                  </span>
+                ))}
+              </span>
+            ))}
+          </p>
+          <p className="sr-only" aria-live="polite">
+            {plain(lines.join(' '))}
+          </p>
+        </div>
+      )}
+
+      {scene >= CATCH && (
+        <div className="intro-catch" key="catch">
+          <p className="intro-catch-line">仕分けろ。</p>
+          <p className="intro-catch-line">名付けろ。</p>
+          <p className="intro-catch-sub">GROUPING &amp; LABELING</p>
+        </div>
+      )}
+
+      {full && (
+        <div className="intro-foot">
+          {scene >= 1 && scene < CATCH && (
+            <span className="intro-progress" aria-hidden="true">
+              {STORY.map((_, i) => (
+                <i key={i} className={i < scene ? 'on' : undefined} />
+              ))}
+            </span>
+          )}
+          <button type="button" className="intro-skip" onClick={finish}>
+            スキップ <span aria-hidden="true">▶▶</span>
+          </button>
+        </div>
+      )}
+    </div>
+  );
+}

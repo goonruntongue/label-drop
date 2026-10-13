@@ -313,6 +313,12 @@ export interface GameState {
   nudgeSubmit(reason: 'pending' | 'labels'): void;
   /** Fix 7: animated how-to-play; opens by itself on the very first visit. */
   tutorialOpen: boolean;
+  /** The opening (ui/Intro.tsx) is on screen: at every launch, and when replayed from the settings. */
+  introOpen: boolean;
+  /** Replayed from the settings: the whole story again, not just the title. */
+  introReplay: boolean;
+  replayIntro(): void;
+  closeIntro(): void;
   openTutorial(): void;
   closeTutorial(): void;
   /** Debug: play the level-up show for any level without touching progress. */
@@ -394,6 +400,10 @@ export const useGame = create<GameState>()((set, get) => {
     nudge: null,
     nudgeSubmit: (reason) => set({ nudge: { reason, seq: (get().nudge?.seq ?? 0) + 1 } }),
     tutorialOpen: !load<boolean>('practice-ia:tutorial-seen', false, () => true),
+    introOpen: true,
+    introReplay: false,
+    replayIntro: () => set({ introOpen: true, introReplay: true, tuningOpen: false }),
+    closeIntro: () => set({ introOpen: false, introReplay: false }),
     openTutorial: () => set({ tutorialOpen: true }),
     closeTutorial: () => set({ tutorialOpen: false }),
     reveal: null,

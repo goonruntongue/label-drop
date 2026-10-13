@@ -106,6 +106,12 @@ export function SettingsPanel({ children }: { children?: ReactNode }) {
         </label>
       </section>
 
+      <section className="settings-group" aria-label="オープニング">
+        <button type="button" className="btn" onClick={() => useGame.getState().replayIntro()}>
+          オープニングをもう一度見る
+        </button>
+      </section>
+
       <details className="settings-advanced">
         <summary>操作の調整（上級）</summary>
         {FIELDS.map((f) => (

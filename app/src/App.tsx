@@ -18,6 +18,7 @@ import { prefetchAi, tiersForLevel } from './aiProblems';
 import { Buddy } from './ui/Buddy';
 import { CharacterGallery, CharacterReveal } from './ui/Characters';
 import { Tutorial } from './ui/Tutorial';
+import { Intro } from './ui/Intro';
 
 // Block textures are baked once, so every glyph subset must be loaded before the stage mounts.
 async function preloadFonts() {
@@ -70,6 +71,7 @@ export default function App() {
   const announcement = useGame((s) => s.announcement);
   const theme = useGame((s) => s.theme);
   const prefs = useGame((s) => s.prefs);
+  const introOpen = useGame((s) => s.introOpen);
   useEffect(() => {
     document.documentElement.dataset.theme = theme;
   }, [theme]);
@@ -130,9 +132,12 @@ export default function App() {
       <RoundEffects />
       <CharacterReveal />
       <CharacterGallery />
-      <Tutorial />
+      {/* The how-to-play (first visit) waits for the opening to finish. */}
+      {!introOpen && <Tutorial />}
       <Celebration />
       <DebugPanel />
+      {/* Remounted for each showing (launch, replay), so it always starts from the title. */}
+      {introOpen && <Intro />}
       <div className="sr-only" aria-live="polite">
         {announcement}
       </div>

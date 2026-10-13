@@ -51,6 +51,18 @@
       ],
       "port": 5180,
       "autoPort": true
+    },
+    {
+      "name": "matomate-dx",
+      "runtimeExecutable": "npm",
+      "runtimeArgs": [
+        "--prefix",
+        "Matomate/app",
+        "run",
+        "dev:dx"
+      ],
+      "port": 5181,
+      "autoPort": true
     }
   ]
 }
