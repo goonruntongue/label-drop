@@ -10,6 +10,7 @@ import { SettingsPanel } from './Overlays';
 import { AiEnergyMeter, AiEnergySection } from './AiEnergy';
 import { AI_ENABLED } from '../api';
 import { useDialog } from './useDialog';
+import { APP_NAME, PORTAL } from '../edition';
 
 const ICONS = {
   undo: 'M9 14 4 9l5-5M4 9h10.5a5.5 5.5 0 0 1 0 11H11',
@@ -128,6 +129,7 @@ function AppIdentity() {
   if (OPENED_FROM_IA) {
     return <button type="button" className="brand brand-back" onClick={goBack}>← 前に戻る</button>;
   }
+  if (PORTAL) return <span className="brand" aria-label={APP_NAME}>IA <b>仕分け練習</b></span>;
   return <span className="brand" aria-label="Label Drop">Label <b>Drop</b></span>;
 }
 
@@ -184,7 +186,7 @@ function SaveSlots({ onClose }: { onClose: () => void }) {
       <section className="save-slots" role="dialog" aria-modal="true" aria-labelledby="save-slots-title" onMouseDown={(e) => e.stopPropagation()} ref={dialog}>
         <header><div><span className="kicker">LOCAL SAVE</span><h2 id="save-slots-title">セーブスロット</h2></div><button type="button" className="btn-icon" aria-label="閉じる" onClick={onClose}>×</button></header>
         <p>
-          保存するのは<b>解いている途中の盤面だけ</b>です（レベル・★・称号・👑は保存しません。いつも今の進み具合のままです）。この端末のブラウザ内にだけ保存します。
+          保存するのは<b>解いている途中の盤面だけ</b>です{PORTAL ? '。' : '（レベル・★・称号・👑は保存しません。いつも今の進み具合のままです）。'}この端末のブラウザ内にだけ保存します。
         </p>
         <div className="save-slot-list">
           {Array.from({ length: SAVE_SLOT_COUNT }, (_, i) => {
@@ -215,7 +217,7 @@ function SaveSlots({ onClose }: { onClose: () => void }) {
             );
           })}
         </div>
-        <ResetProgress onDone={onClose} />
+        {!PORTAL && <ResetProgress onDone={onClose} />}
       </section>
     </div>
   );
@@ -297,12 +299,14 @@ export function Header() {
     <header className="hud" ref={measure}>
       <div className="hud-brand">
         <AppIdentity />
-        <span className="badge">P1 · 練習版</span>
+        {!PORTAL && <span className="badge">P1 · 練習版</span>}
       </div>
-      <label className="hud-field hud-wide">
-        <span className="kicker">MODE</span>
-        {modeSelect}
-      </label>
+      {!PORTAL && (
+        <label className="hud-field hud-wide">
+          <span className="kicker">MODE</span>
+          {modeSelect}
+        </label>
+      )}
       <span className="hud-break" aria-hidden="true" />
       {mode === 'level' && <LevelMeter />}
       <label className="hud-field hud-topic">
@@ -339,13 +343,15 @@ export function Header() {
         </span>
       )}
       <div className="hud-actions">
-        <button type="button" className="btn btn-gallery hud-wide" title="魔法使い図鑑（キャラクター）" onClick={openGallery}>
-          {mode === 'free' ? <Face className="hud-face is-small" /> : null}
-          <span aria-hidden="true">📖</span>
-          図鑑
-        </button>
-        <button type="button" className="btn hud-wide" title="遊び方（アニメーションで説明）" onClick={openTutorial}>
-          ？ 遊び方
+        {!PORTAL && (
+          <button type="button" className="btn btn-gallery hud-wide" title="魔法使い図鑑（キャラクター）" onClick={openGallery}>
+            {mode === 'free' ? <Face className="hud-face is-small" /> : null}
+            <span aria-hidden="true">📖</span>
+            図鑑
+          </button>
+        )}
+        <button type="button" className="btn hud-wide" title={PORTAL ? '使い方（アニメーションで説明）' : '遊び方（アニメーションで説明）'} onClick={openTutorial}>
+          ？ {PORTAL ? '使い方' : '遊び方'}
         </button>
         <span className="hud-wide">
           <DeviceButton />
@@ -390,16 +396,20 @@ export function Header() {
         </button>
       </div>
       <SettingsPanel>
-        <label className="settings-field">
-          <span className="settings-legend">モード</span>
-          {modeSelect}
-        </label>
+        {!PORTAL && (
+          <label className="settings-field">
+            <span className="settings-legend">モード</span>
+            {modeSelect}
+          </label>
+        )}
         <div className="settings-buttons">
-          <button type="button" className="btn" onClick={openGallery}>
-            📖 図鑑
-          </button>
+          {!PORTAL && (
+            <button type="button" className="btn" onClick={openGallery}>
+              📖 図鑑
+            </button>
+          )}
           <button type="button" className="btn" onClick={openTutorial}>
-            ？ 遊び方
+            ？ {PORTAL ? '使い方' : '遊び方'}
           </button>
           <button type="button" className="btn" onClick={openSave}>
             <Icon d={ICONS.save} /> セーブ

@@ -5,6 +5,7 @@
 import QRCode from 'qrcode';
 import { useEffect, useState } from 'react';
 import { useDialog } from './useDialog';
+import { APP_NAME, PORTAL } from '../edition';
 
 const LAN_URLS: string[] = __LAN_URLS__;
 
@@ -70,14 +71,14 @@ function SharePopover({ onClose }: { onClose: () => void }) {
   const canShare = typeof navigator.share === 'function' && !lan;
   const share = () => {
     navigator
-      .share({ title: 'Label Drop', text: '情報を分けて名付ける練習ゲーム「Label Drop」', url })
+      .share({ title: APP_NAME, text: PORTAL ? '情報を分けて名前を付ける練習「IA仕分け練習」' : '情報を分けて名付ける練習ゲーム「Label Drop」', url })
       .catch(() => undefined);
   };
 
   return (
     <div className="device-popover" role="dialog" aria-label="このアプリを共有" ref={dialog}>
       <div className="device-head">
-        <p className="kicker">{lan ? 'SAME-LAN DEVICE TEST' : 'SHARE LABEL DROP'}</p>
+        <p className="kicker">{lan ? 'SAME-LAN DEVICE TEST' : PORTAL ? 'SHARE' : 'SHARE LABEL DROP'}</p>
         <button type="button" className="btn-mini" aria-label="閉じる" onClick={onClose}>
           ×
         </button>

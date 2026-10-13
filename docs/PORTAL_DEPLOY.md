@@ -44,8 +44,11 @@
 ```bash
 cd C:/Users/owner/Desktop/Apps/IA-DX/app
 npm run typecheck
-npm run build      # ポータルは AI あり版。VITE_AI=off を付けない（それは label-drop の GitHub Pages 用）
+npm run build:portal   # ポータル用の版「IA仕分け練習」→ app/dist-portal（2026-10-13 から。ポータルにゲーム版は置かない）
 ```
+
+- ポータルは情報サイトなので、ゲーム性（オープニング、3Dキャラクター、レベルアップ、答え合わせの演出）を外した版を置く。★と、答え合わせの一言は残す。
+- 以下の手順の「`app/dist/`」は、ポータルに置くものについては **`app/dist-portal/`** と読み替える。
 
 `label-drop` に push し、公開版（GitHub Pages）で動作を確認しておく。
 

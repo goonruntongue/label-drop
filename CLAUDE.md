@@ -3,6 +3,7 @@
 ## このリポジトリ
 
 - **Label Drop**（practice IA シリーズ）：情報アーキテクチャのグルーピングとラベリングを練習する 3D ゲーム。
+- **2つの版を、この1つのソースから出す**（`app/src/edition.ts`）。**Label Drop**（ゲーム版。オープニング、3Dキャラクター、レベルアップあり。GitHub Pages）と、**IA仕分け練習**（ポータル用。ゲーム性を外した道具版。`npm --prefix app run build:portal` → `app/dist-portal/` → ポータルの `about-ia/app/dist/`）。ポータルに置くのは必ずポータル用のビルド（2026-10-13 決定）。
 - アプリ本体は `app/`（Vite + React + React Three Fiber）。API は `worker/`（Cloudflare Worker＋D1、P3〜）。仕様は `docs/SPEC.md`。
 - Cloudflare は**無料プランのまま**使い、従量課金が起きるものは使わない（SPEC 8.1 の決定）。Cloudflare 上にリソースを作る前にユーザーに確認する。
 - `main` に push すると、GitHub Actions で GitHub Pages（https://goonruntongue.github.io/label-drop/app/ ）に自動デプロイされる。アプリはどの公開先でも**静的に動く**（AI 機能は `VITE_AI=on` のときだけ。既定は無効。2026-10-03 決定 #25）。お題は Claude が作って `app/src/data/` に入れる（Workers AI は使わない）。作るときはローカルスキル `.claude/skills/label-drop-topic/SKILL.md` に従う。教室モードは **Mato mate（マトメイト）** という別リポジトリ（`Matomate/`、https://github.com/goonruntongue/matomate ）で作る。仕様は `Matomate/PRD.md`。
@@ -19,8 +20,10 @@
 ```bash
 npm --prefix app run dev        # 開発サーバー（LAN にも公開。ヘッダーの「共有」で QR）
 npm --prefix app run typecheck
-npm --prefix app run build
-npm --prefix app run icons      # app/icons/icon.svg から PWA アイコンを再生成
+npm --prefix app run build         # Label Drop（ゲーム版）
+npm --prefix app run build:portal  # IA仕分け練習（ポータル用）→ app/dist-portal
+npm --prefix app run dev:portal    # ポータル用の版を開発サーバーで見る
+npm --prefix app run icons      # PWA アイコンを再生成（icon.svg → public/icons、icon-portal.svg → icons/portal）
 npm --prefix worker run dev     # API（Cloudflare Worker）をローカルで起動（:8787、ローカルの D1）
 npm --prefix worker run db:local  # ローカルの D1 にマイグレーションを当てる
 npm --prefix worker test        # API のテスト（AUTH_MODE の両方）

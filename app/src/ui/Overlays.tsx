@@ -1,5 +1,6 @@
 // The settings panel (header, far right; T key). Display settings for everyone (SPEC 5.6), the
 // controls the narrow header hides (passed in as children), and the feel tuning under 上級.
+import { PORTAL } from '../edition';
 import { useEffect, type ReactNode } from 'react';
 import { useGame, type Motion, type TextSize, type Tuning } from '../state/store';
 import { THEME_IDS, type ThemeId } from '../theme/themes';
@@ -106,11 +107,13 @@ export function SettingsPanel({ children }: { children?: ReactNode }) {
         </label>
       </section>
 
-      <section className="settings-group" aria-label="オープニング">
-        <button type="button" className="btn" onClick={() => useGame.getState().replayIntro()}>
-          オープニングをもう一度見る
-        </button>
-      </section>
+      {!PORTAL && (
+        <section className="settings-group" aria-label="オープニング">
+          <button type="button" className="btn" onClick={() => useGame.getState().replayIntro()}>
+            オープニングをもう一度見る
+          </button>
+        </section>
+      )}
 
       <details className="settings-advanced">
         <summary>操作の調整（上級）</summary>

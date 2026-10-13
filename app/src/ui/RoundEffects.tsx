@@ -9,6 +9,7 @@ import { cheerFor, levelUpCheer } from '../game/cheers';
 import type { CelebrationVariant } from '../game/CelebrationScene';
 import { titleFor } from '../game/levels';
 import { useGame } from '../state/store';
+import { PORTAL } from '../edition';
 import { SafeBoundary } from './SafeBoundary';
 
 const CelebrationScene = lazy(() => import('../game/CelebrationScene'));
@@ -34,6 +35,7 @@ export function RoundEffects() {
       const result = s.result;
       if (!result || s.submitSeq === prev.submitSeq) return;
       audio.stars(result.stars);
+      if (PORTAL) return; // no banner, no confetti: the result panel opens straight away
       if (s.celebrating) return; // the final clear takes over
       const cheer = cheerFor(result, s.levelUpTo);
       let variant: Show['variant'] | null = null;

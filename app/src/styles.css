@@ -1445,3 +1445,6 @@ body.is-dragging .buddy-figure, .buddy.is-hidden .buddy-figure { pointer-events:
 .intro-start-skip:hover { color: #fff; }
 @keyframes intro-pulse { 50% { box-shadow: 0 0 44px rgba(69, 229, 255, 0.6); } }
 :root:not([data-motion="full"]) :is(.intro-start, .intro-start-button) { animation: none; }
+
+/* Portal edition: why the answer check can't run yet (Label Drop's stage character says this instead). */
+.submit-nudge { margin: 0; padding: 8px 10px; border: 1px solid color-mix(in srgb, var(--warning) 60%, transparent); border-radius: var(--r-ctl); background: color-mix(in srgb, var(--warning) 12%, transparent); font-size: 12px; line-height: 1.6; animation: fade-up 300ms ease-out both; }

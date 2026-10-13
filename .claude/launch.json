@@ -63,6 +63,18 @@
       ],
       "port": 5181,
       "autoPort": true
+    },
+    {
+      "name": "app-portal",
+      "runtimeExecutable": "npm",
+      "runtimeArgs": [
+        "--prefix",
+        "app",
+        "run",
+        "dev:portal"
+      ],
+      "port": 5175,
+      "autoPort": true
     }
   ]
 }

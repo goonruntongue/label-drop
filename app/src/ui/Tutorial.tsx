@@ -1,5 +1,6 @@
 // Fix 7: an animated "how to play". Shown once on the first visit, and any time from the header
 // ("？ 遊び方"). Each step is a small looping CSS animation of the real gesture.
+import { PORTAL } from '../edition';
 import { useEffect, useState } from 'react';
 import { useGame } from '../state/store';
 import { useDialog } from './useDialog';
@@ -16,7 +17,9 @@ const STEPS: Step[] = [
   { title: 'ブロックを箱に投げ入れる', text: 'キーワードのブロックをつかんで、箱の方へ投げます（スマホはスワイプ）。', scene: 'throw' },
   { title: 'タップでも入れられる', text: 'ブロックをタップして選び、入れたい箱をタップしても入ります。', scene: 'tap' },
   { title: '箱に名前を付ける', text: '中身をひと言で表すラベルを付けます。お題の人が探しやすい言葉で。', scene: 'name' },
-  { title: '答え合わせで★を集める', text: '★を5つ集めるとレベルアップ。新しい称号とキャラクターが手に入ります。', scene: 'check' },
+  PORTAL
+    ? { title: '答え合わせで確かめる', text: '全部入れて名前を付けたら、答え合わせ。模範の分け方と比べて、ちがいを確かめます。', scene: 'check' }
+    : { title: '答え合わせで★を集める', text: '★を5つ集めるとレベルアップ。新しい称号とキャラクターが手に入ります。', scene: 'check' },
 ];
 
 function Scene({ scene }: { scene: Step['scene'] }) {

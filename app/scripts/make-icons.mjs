@@ -1,11 +1,12 @@
-// Rasterize icons/icon.svg into the PNGs the PWA manifest and iOS need (run: npm run icons).
+// Rasterize the app icons into the PNGs the PWA manifest and iOS need (run: npm run icons).
+//  - Label Drop (public/icons/): icons/icon.svg
+//  - IA仕分け練習, the portal edition (icons/portal/, outside public/ so Label Drop doesn't ship it):
+//    icons/icon-portal.svg. scripts/portal-dist.mjs copies that set into the portal build.
 import { mkdir } from 'node:fs/promises';
 import { fileURLToPath } from 'node:url';
 import sharp from 'sharp';
 
-const SRC = fileURLToPath(new URL('../icons/icon.svg', import.meta.url));
-const OUT = fileURLToPath(new URL('../public/icons/', import.meta.url));
-await mkdir(OUT, { recursive: true });
+const at = (path) => fileURLToPath(new URL(path, import.meta.url));
 
 const targets = [
   { file: 'apple-touch-icon.png', size: 180 }, // iOS home screen
@@ -16,14 +17,18 @@ const targets = [
   { file: 'favicon-32.png', size: 32 },
 ];
 
-for (const t of targets) {
-  const inner = Math.round(t.size * (1 - 2 * (t.pad ?? 0)));
-  const art = await sharp(SRC, { density: 384 }).resize(inner, inner).png().toBuffer();
-  const img = t.pad
-    ? sharp({ create: { width: t.size, height: t.size, channels: 4, background: '#050C1C' } }).composite([
-        { input: art, gravity: 'center' },
-      ])
-    : sharp(art);
-  await img.png().toFile(OUT + t.file);
-  console.log('wrote', t.file);
+for (const { src, out, background } of [
+  { src: '../icons/icon.svg', out: '../public/icons/', background: '#050C1C' },
+  { src: '../icons/icon-portal.svg', out: '../icons/portal/', background: '#EAF0F8' },
+]) {
+  await mkdir(at(out), { recursive: true });
+  for (const t of targets) {
+    const inner = Math.round(t.size * (1 - 2 * (t.pad ?? 0)));
+    const art = await sharp(at(src), { density: 384 }).resize(inner, inner).png().toBuffer();
+    const img = t.pad
+      ? sharp({ create: { width: t.size, height: t.size, channels: 4, background } }).composite([{ input: art, gravity: 'center' }])
+      : sharp(art);
+    await img.png().toFile(at(out) + t.file);
+    console.log('wrote', out.replace('../', ''), t.file);
+  }
 }

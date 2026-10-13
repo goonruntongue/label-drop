@@ -6,6 +6,7 @@ import { levelDef } from '../game/levels';
 import { labelIssues } from '../hints/labelRules';
 import { TRAY_GLYPHS, useGame, type Tray } from '../state/store';
 import { THEMES } from '../theme/themes';
+import { PORTAL } from '../edition';
 
 export function Inventory() {
   const trays = useGame((s) => s.trays);
@@ -74,6 +75,7 @@ function SubmitBar() {
   const level = useGame((s) => s.level);
   const result = useGame((s) => s.result);
   const resultOpen = useGame((s) => s.resultOpen);
+  const nudge = useGame((s) => s.nudge);
   const { submit, openResult, newRound, nudgeSubmit } = useGame.getState();
 
   const pending = items.filter((item) => !assign[item.id]).length;
@@ -124,6 +126,12 @@ function SubmitBar() {
       >
         答え合わせ
       </button>
+      {/* Label Drop's stage character says this; the portal edition has no character. */}
+      {PORTAL && nudge && !ready && (
+        <p key={nudge.seq} className="submit-nudge" role="status">
+          {pending > 0 ? 'まだ置いていないブロックがあります。全部、箱に入れてください。' : '名前のない箱があります。ラベルを付けてから答え合わせしましょう。'}
+        </p>
+      )}
     </section>
   );
 }

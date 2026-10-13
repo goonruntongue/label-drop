@@ -1,3 +1,4 @@
+import { PORTAL } from '../edition';
 import * as THREE from 'three';
 import {
   BLOCK_D,
@@ -29,6 +30,7 @@ export interface Metrics {
 /** The stage character's corner in CSS px (top-right of the canvas): its column width and how far
  *  down it reaches. Must match `.buddy` (top, right) + `.buddy-figure` (size) in styles.css. */
 export function buddyCornerPx(width: number): { w: number; h: number } {
+  if (PORTAL) return { w: 0, h: 0 }; // no stage character in the portal edition: blocks may use the corner
   return width <= 640 ? { w: 102, h: 52 + 126 } : { w: 164, h: 56 + 196 };
 }
 

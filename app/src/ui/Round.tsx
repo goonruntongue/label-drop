@@ -8,6 +8,7 @@ import { TRAY_GLYPHS, useGame } from '../state/store';
 import { THEMES } from '../theme/themes';
 import { dom } from '../game/runtime';
 import { useDialog } from './useDialog';
+import { PORTAL } from '../edition';
 
 function Stars({ value, max = 3, size }: { value: number; max?: number; size?: 'lg' }) {
   return (
@@ -47,7 +48,7 @@ export function BriefingOverlay() {
             LEVEL {level} ・ {def.title} ・ {titleFor(level)}
           </p>
         ) : (
-          <p className="kicker">FREE PLAY</p>
+          <p className="kicker">{PORTAL ? 'PRACTICE' : 'FREE PLAY'}</p>
         )}
         <h2>
           {problem.title}

@@ -19,6 +19,7 @@ import { Buddy } from './ui/Buddy';
 import { CharacterGallery, CharacterReveal } from './ui/Characters';
 import { Tutorial } from './ui/Tutorial';
 import { Intro } from './ui/Intro';
+import { PORTAL } from './edition';
 
 // Block textures are baked once, so every glyph subset must be loaded before the stage mounts.
 async function preloadFonts() {
@@ -113,7 +114,7 @@ export default function App() {
               <small className="loading-note">キーワードの文字を準備しています…</small>
             </div>
           )}
-          <Buddy />
+          {!PORTAL && <Buddy />}
           <BriefCard />
           <HintPanel />
           <ResultPanel />
@@ -130,11 +131,11 @@ export default function App() {
       />
       <KeywordTip />
       <RoundEffects />
-      <CharacterReveal />
-      <CharacterGallery />
+      {!PORTAL && <CharacterReveal />}
+      {!PORTAL && <CharacterGallery />}
       {/* The how-to-play (first visit) waits for the opening to finish. */}
       {!introOpen && <Tutorial />}
-      <Celebration />
+      {!PORTAL && <Celebration />}
       <DebugPanel />
       {/* Remounted for each showing (launch, replay), so it always starts from the title. */}
       {introOpen && <Intro />}
