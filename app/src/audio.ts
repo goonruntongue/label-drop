@@ -94,6 +94,11 @@ export const pick = () => tone(740, 0.06, 'sine', 0.08, 0, 520);
 export const tick = () => tone(1250, 0.04, 'triangle', 0.05);
 export const drop = () => tone(430, 0.09, 'sine', 0.07, 0, 300);
 export const miss = () => tone(170, 0.18, 'sine', 0.12, 0, 80);
+/** "Pico!": the start button on the title screen. Two quick, bright square blips, the second higher. */
+export function pico() {
+  tone(988, 0.07, 'square', 0.05);
+  tone(1480, 0.11, 'square', 0.05, 0.075);
+}
 
 export function whoosh(speed: number) {
   const a = audio();
@@ -309,4 +314,87 @@ export function clack() {
 export function sparkle() {
   const notes = [1567.98, 2093, 2349.32, 2637.02, 3135.96, 2793.83];
   notes.forEach((f, i) => tone(f * (0.98 + Math.random() * 0.04), 0.25, 'triangle', 0.035, 0.05 + i * 0.055));
+}
+
+// ── Opening music (the one sound that is a recording, not synthesized) ──
+// Played through the same context as the effects, so it is unlocked by the same tap and can be faded
+// (on iOS the volume of an <audio> element can't be changed). AAC first; MP3 if that can't be decoded.
+const BGM_URLS = ['./intro/bgm.m4a', './intro/bgm.mp3'];
+/** Against the effects' master gain (0.5): the music sits a little under the click of the button. */
+const BGM_GAIN = 0.9;
+let bgmBuffer: Promise<AudioBuffer | null> | null = null;
+let bgm: { source: AudioBufferSourceNode; gain: GainNode } | null = null;
+/** Bumped by every start and stop: a start that finishes loading after a stop must not play. */
+let bgmTurn = 0;
+
+async function loadBgm(c: AudioContext): Promise<AudioBuffer | null> {
+  for (const url of BGM_URLS) {
+    try {
+      const res = await fetch(url);
+      if (!res.ok) continue;
+      return await c.decodeAudioData(await res.arrayBuffer());
+    } catch {
+      // Try the next format.
+    }
+  }
+  return null;
+}
+
+/** For checks from the console / tests. */
+export const bgmPlaying = () => bgm !== null;
+
+/** Fetch and decode the opening music ahead of the start button (decoding works before the first tap). */
+export function preloadBgm() {
+  const c = context();
+  if (c && !bgmBuffer) bgmBuffer = loadBgm(c);
+}
+
+/** Start the opening music (call it from the tap that starts the movie). Silent when sound is off. */
+export function playBgm() {
+  const a = audio();
+  if (!a) return;
+  preloadBgm();
+  const turn = ++bgmTurn;
+  void bgmBuffer?.then((buffer) => {
+    if (!buffer || turn !== bgmTurn || useGame.getState().muted) return;
+    stopNow();
+    const source = a.ctx.createBufferSource();
+    const gain = a.ctx.createGain();
+    source.buffer = buffer;
+    gain.gain.setValueAtTime(0.0001, a.ctx.currentTime);
+    gain.gain.exponentialRampToValueAtTime(BGM_GAIN, a.ctx.currentTime + 0.6);
+    source.connect(gain).connect(a.out);
+    source.start();
+    bgm = { source, gain };
+    source.onended = () => {
+      if (bgm?.source === source) bgm = null;
+    };
+  });
+}
+
+function stopNow() {
+  if (!bgm) return;
+  try {
+    bgm.source.stop();
+  } catch {
+    // Already stopped.
+  }
+  bgm = null;
+}
+
+/** Fade the opening music out (the movie ended or was skipped). */
+export function stopBgm(fadeMs = 1200) {
+  bgmTurn++;
+  if (!bgm || !ctx) return;
+  const { source, gain } = bgm;
+  const t = ctx.currentTime;
+  gain.gain.cancelScheduledValues(t);
+  gain.gain.setValueAtTime(Math.max(0.0001, gain.gain.value), t);
+  gain.gain.exponentialRampToValueAtTime(0.0001, t + fadeMs / 1000);
+  try {
+    source.stop(t + fadeMs / 1000 + 0.05);
+  } catch {
+    // Already stopped.
+  }
+  bgm = null;
 }

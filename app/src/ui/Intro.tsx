@@ -6,6 +6,7 @@
 // Each story scene may have a picture behind the text: public/intro/scene-1.webp … scene-5.webp.
 // They are optional. A scene whose picture is missing is simply black.
 import { useCallback, useEffect, useRef, useState } from 'react';
+import * as audio from '../audio';
 import { useGame } from '../state/store';
 
 const SEEN_KEY = 'practice-ia:intro-seen';
@@ -60,6 +61,7 @@ export function Intro() {
   const finish = useCallback(() => {
     if (leaving) return;
     setLeaving(true);
+    audio.stopBgm();
     try {
       localStorage.setItem(SEEN_KEY, '1');
     } catch {
@@ -77,6 +79,24 @@ export function Intro() {
     setTyped(0);
     setScene(scene + 1);
   }, [finish, leaving, scene]);
+
+  /** はじめる: a "pico!", then the movie with its music. */
+  const start = useCallback(() => {
+    audio.pico();
+    audio.playBgm();
+    next();
+  }, [next]);
+
+  // The music is fetched while the title is up, so it starts on the beat of the button. Replayed from
+  // the settings, the movie starts by itself: so does the music (that click was the user's gesture).
+  useEffect(() => {
+    if (!open) return;
+    audio.preloadBgm();
+    if (replay) audio.playBgm();
+    return () => audio.stopBgm(400);
+    // Once per showing.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [open]);
 
   /** A tap: finish the line being typed, or go to the next scene. The title screen waits for its button. */
   const advance = useCallback(() => {
@@ -116,13 +136,13 @@ export function Intro() {
         // The skip button handles its own Enter / Space.
         if (e.target instanceof Element && e.target.closest('button')) return;
         e.preventDefault();
-        if (scene === 0) next(); // the same as pressing はじめる
+        if (scene === 0) start(); // the same as pressing はじめる
         else advance();
       } else if (e.key !== 'Tab') e.preventDefault();
     };
     document.addEventListener('keydown', onKey, true);
     return () => document.removeEventListener('keydown', onKey, true);
-  }, [open, advance, finish, next, scene]);
+  }, [open, advance, finish, start, scene]);
 
   if (!open) return null;
 
@@ -159,7 +179,7 @@ export function Intro() {
           </h1>
           <p className="intro-sub">仕分けて、名付ける。</p>
           <div className="intro-start">
-            <button type="button" className="intro-start-button" autoFocus onClick={next}>
+            <button type="button" className="intro-start-button" autoFocus onClick={start}>
               はじめる
             </button>
             {seen && (

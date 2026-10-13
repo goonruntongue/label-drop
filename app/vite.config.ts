@@ -37,7 +37,8 @@ function precacheManifest(): Plugin {
     name: 'label-drop-precache',
     apply: 'build',
     generateBundle(_, bundle) {
-      const shell = publicFiles('public').filter((f) => f !== 'sw.js' && !f.startsWith('characters/'));
+      // intro/bgm.mp3 is only the fallback for browsers that can't decode the AAC file: not worth keeping offline.
+      const shell = publicFiles('public').filter((f) => f !== 'sw.js' && !f.startsWith('characters/') && f !== 'intro/bgm.mp3');
       const files = ['./', ...Object.keys(bundle), ...shell];
       this.emitFile({ type: 'asset', fileName: 'precache.json', source: JSON.stringify({ files }, null, 1) });
     },
