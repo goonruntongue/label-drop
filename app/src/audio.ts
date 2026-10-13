@@ -322,6 +322,7 @@ export function sparkle() {
 const BGM_URLS = ['./intro/bgm.m4a', './intro/bgm.mp3'];
 /** Against the effects' master gain (0.5): the music sits a little under the click of the button. */
 const BGM_GAIN = 0.9;
+const BGM_FADE_IN_S = 3;
 let bgmBuffer: Promise<AudioBuffer | null> | null = null;
 let bgm: { source: AudioBufferSourceNode; gain: GainNode } | null = null;
 /** Bumped by every start and stop: a start that finishes loading after a stop must not play. */
@@ -361,8 +362,9 @@ export function playBgm() {
     const source = a.ctx.createBufferSource();
     const gain = a.ctx.createGain();
     source.buffer = buffer;
-    gain.gain.setValueAtTime(0.0001, a.ctx.currentTime);
-    gain.gain.exponentialRampToValueAtTime(BGM_GAIN, a.ctx.currentTime + 0.6);
+    // Fades in: silent at the tap, full after BGM_FADE_IN_S (a straight ramp, so it is heard rising all the way).
+    gain.gain.setValueAtTime(0, a.ctx.currentTime);
+    gain.gain.linearRampToValueAtTime(BGM_GAIN, a.ctx.currentTime + BGM_FADE_IN_S);
     source.connect(gain).connect(a.out);
     source.start();
     bgm = { source, gain };
