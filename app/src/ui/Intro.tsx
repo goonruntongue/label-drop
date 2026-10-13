@@ -1,7 +1,7 @@
 // Opening: the title screen waits for 「はじめる」. Pressing it plays the movie: a short story of what
 // information architecture is, then the two things this game makes you practise, then the game.
-// White mincho type on black, typed out line by line. A tap, Enter or Space moves on; "スキップ" or Esc
-// goes straight to the game. Someone who has seen the movie before can also start without it.
+// White mincho type on black, typed out line by line. Each scene stays until a tap, Enter or Space
+// (or 30 seconds); "スキップ" or Esc goes straight to the game. The music loops for as long as it takes. Someone who has seen the movie before can also start without it.
 //
 // Each story scene may have a picture behind the text: public/intro/scene-1.webp … scene-5.webp.
 // They are optional. A scene whose picture is missing is simply black.
@@ -11,9 +11,8 @@ import { useGame } from '../state/store';
 
 const SEEN_KEY = 'practice-ia:intro-seen';
 const TYPE_MS = 62;
-/** How long a finished scene stays before the next one comes by itself. */
-const HOLD_MS = 2600;
-const CATCH_MS = 3600;
+/** Every scene of the movie waits for a tap; left alone, it moves on by itself after this long. */
+const SCENE_MS = 30_000;
 const FADE_MS = 500;
 
 /**
@@ -116,14 +115,12 @@ export function Intro() {
     return () => window.clearTimeout(id);
   }, [open, leaving, scene, typed, done, total, still]);
 
-  // Scenes move on by themselves.
+  // A scene stays until it is tapped, or for SCENE_MS (counted from when it appears). The title waits for its button.
   useEffect(() => {
-    if (!open || leaving) return;
-    const wait = scene === 0 ? 0 : scene >= CATCH ? CATCH_MS : done ? HOLD_MS : 0;
-    if (!wait) return;
-    const id = window.setTimeout(next, wait);
+    if (!open || leaving || scene === 0) return;
+    const id = window.setTimeout(next, SCENE_MS);
     return () => window.clearTimeout(id);
-  }, [open, leaving, scene, done, next]);
+  }, [open, leaving, scene, next]);
 
   // Keys belong to the opening while it is up (the game underneath has shortcuts of its own).
   useEffect(() => {
@@ -231,6 +228,12 @@ export function Intro() {
               {STORY.map((_, i) => (
                 <i key={i} className={i < scene ? 'on' : undefined} />
               ))}
+            </span>
+          )}
+          {/* Shown once the scene has been read out: nothing moves on by itself for a while. */}
+          {(scene >= CATCH || done) && (
+            <span className="intro-next" aria-hidden="true">
+              タップで次へ <i>▶</i>
             </span>
           )}
           <button type="button" className="intro-skip" onClick={finish}>

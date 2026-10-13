@@ -362,6 +362,7 @@ export function playBgm() {
     const source = a.ctx.createBufferSource();
     const gain = a.ctx.createGain();
     source.buffer = buffer;
+    source.loop = true; // the movie lasts as long as the player takes over each scene
     // Fades in: silent at the tap, full after BGM_FADE_IN_S (a straight ramp, so it is heard rising all the way).
     gain.gain.setValueAtTime(0, a.ctx.currentTime);
     gain.gain.linearRampToValueAtTime(BGM_GAIN, a.ctx.currentTime + BGM_FADE_IN_S);
