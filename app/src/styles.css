@@ -1390,18 +1390,17 @@ body.is-dragging .buddy-figure, .buddy.is-hidden .buddy-figure { pointer-events:
   animation: intro-kb 14s cubic-bezier(0.22, 0.5, 0.36, 1) both, intro-art-in 900ms ease-out both;
   will-change: transform;
 }
-.intro-art.is-kb1 { --kb-from: scale(1.04); --kb-to: scale(1.26); }                                        /* into the swarm */
-.intro-art.is-kb2 { --kb-from: scale(1.02) translateY(-1.5%); --kb-to: scale(1.3) translateY(2%); --kb-origin: 50% 66%; }  /* towards the lone figure */
-.intro-art.is-kb3 { --kb-from: scale(1.18) translateX(4%); --kb-to: scale(1.18) translateX(-4%); }           /* along the shelves */
-.intro-art.is-kb4 { --kb-from: scale(1.3) translateY(3%); --kb-to: scale(1.06) translateY(0); --kb-origin: 50% 70%; }      /* pulling back: order appears */
-.intro-art.is-kb5 { --kb-from: scale(1.03); --kb-to: scale(1.28); --kb-origin: 50% 44%; }                    /* down the lit path */
+.intro-art.is-kb1 { --kb-from: scale(1.04); --kb-to: scale(1.24); --kb-origin: 50% 46%; }                   /* into the sleeping archive */
+.intro-art.is-kb2 { --kb-from: scale(1.2) translateX(4%) translateY(-2%); --kb-to: scale(1.2) translateX(-4%) translateY(2%); }  /* across the falling shelves */
+.intro-art.is-kb3 { --kb-from: scale(1.02); --kb-to: scale(1.28); --kb-origin: 50% 72%; }                    /* towards the two mages */
+.intro-art.is-kb4 { --kb-from: scale(1.3) translateY(3%); --kb-to: scale(1.06) translateY(0); --kb-origin: 50% 70%; }      /* pulling back: the crystals find their boxes */
+.intro-art.is-kb5 { --kb-from: scale(1.03); --kb-to: scale(1.26); --kb-origin: 50% 64%; }                    /* towards the waiting staff */
 /* Upright phones see only the middle of the picture: drift sideways too, so its sides come into view. */
 @media (orientation: portrait) {
   .intro-art { animation: intro-kb 14s cubic-bezier(0.22, 0.5, 0.36, 1) both, intro-art-in 900ms ease-out both, intro-kb-pan 14s cubic-bezier(0.22, 0.5, 0.36, 1) both; }
-  .intro-art.is-kb1 { --kb-pan-from: 30%; --kb-pan-to: 62%; }
-  .intro-art.is-kb3 { --kb-pan-from: 22%; --kb-pan-to: 78%; }
-  .intro-art.is-kb4 { --kb-pan-from: 78%; --kb-pan-to: 30%; }
-  .intro-art.is-kb5 { --kb-pan-from: 34%; --kb-pan-to: 58%; }
+  .intro-art.is-kb1 { --kb-pan-from: 34%; --kb-pan-to: 62%; }
+  .intro-art.is-kb2 { --kb-pan-from: 24%; --kb-pan-to: 76%; }
+  .intro-art.is-kb4 { --kb-pan-from: 70%; --kb-pan-to: 36%; }
 }
 .intro-story::after { content: ""; position: absolute; inset: 0; background: radial-gradient(ellipse at center, rgba(0, 0, 0, 0.42) 0%, rgba(0, 0, 0, 0.3) 45%, rgba(0, 0, 0, 0.78) 100%); pointer-events: none; }
 .intro-lines { position: relative; z-index: 1; margin: 0; max-width: 22em; display: grid; gap: 0.7em; font-family: var(--mincho); font-weight: 900; font-size: clamp(21px, 5.4vw, 46px); line-height: 1.55; letter-spacing: 0.06em; text-align: center; text-wrap: balance; text-shadow: 0 2px 18px rgba(0, 0, 0, 0.9); }

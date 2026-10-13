@@ -21,11 +21,13 @@ const FADE_MS = 500;
  * a phrase is never broken in the middle (no 「情報アーキ／テクチャ」).
  */
 const STORY: string[][] = [
-  ['世界は、|情報で|あふれている。'],
-  ['欲しいものは、|どこかにある。', 'なのに、|見つからない。'],
-  ['悪いのは、|探す人ではない。', '分け方と、|名前だ。'],
-  ['使う人のために、|情報を分け、|名前を付ける。', 'その設計を、|情報アーキテクチャ|― IA と呼ぶ。'],
-  ['良い分け方は、|人を迷わせない。', '良い名前は、|開ける前に|中身を伝える。'],
+  // The world of the game's characters (apprentice mage … grand sage): an archive where words sleep as
+  // crystals (the glass blocks), and mages whose only two spells are sorting and naming.
+  ['ここは、|ことばの書庫。', '世界じゅうのことばが、|結晶になって|眠っている。'],
+  ['ある夜、|棚がくずれ、|結晶は散らばった。', '探しものは、|もう見つからない。'],
+  ['書庫を守るのは、|魔法使いたち。', '使える魔法は、|二つだけ。'],
+  ['仕分けの魔法。|使う人のために、|分ける。', '名付けの魔法。|開ける前に、|中身を伝える。'],
+  ['人はこの魔法を、|情報アーキテクチャ|― IA と呼ぶ。', '見習い魔法使いよ、|杖をとれ。'],
 ];
 const plain = (line: string) => line.replaceAll('|', '');
 
