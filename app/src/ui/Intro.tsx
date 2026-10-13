@@ -1,7 +1,7 @@
-// Opening: the title, then (the first time, or when replayed from the settings) a short story of what
+// Opening: the title screen waits for 「はじめる」. Pressing it plays the movie: a short story of what
 // information architecture is, then the two things this game makes you practise, then the game.
 // White mincho type on black, typed out line by line. A tap, Enter or Space moves on; "スキップ" or Esc
-// goes straight to the game. Later visits show the title for a second and get out of the way.
+// goes straight to the game. Someone who has seen the movie before can also start without it.
 //
 // Each story scene may have a picture behind the text: public/intro/scene-1.webp … scene-5.webp.
 // They are optional. A scene whose picture is missing is simply black.
@@ -12,7 +12,6 @@ const SEEN_KEY = 'practice-ia:intro-seen';
 const TYPE_MS = 62;
 /** How long a finished scene stays before the next one comes by itself. */
 const HOLD_MS = 2600;
-const TITLE_MS = 1300;
 const CATCH_MS = 3600;
 const FADE_MS = 500;
 
@@ -46,9 +45,10 @@ export function Intro() {
   const open = useGame((s) => s.introOpen);
   const replay = useGame((s) => s.introReplay);
   const still = useGame((s) => s.prefs.motion !== 'full');
-  // Decided once per showing: the whole story the first time (or on replay, or with ?intro), else just the title.
-  const [full] = useState(() => replay || !seenBefore() || new URLSearchParams(location.search).has('intro'));
-  const [scene, setScene] = useState(0);
+  // Has this player seen the movie before? Then the title screen also offers to start without it.
+  const [seen] = useState(() => seenBefore() && !new URLSearchParams(location.search).has('intro'));
+  // Replayed from the settings: straight into the movie.
+  const [scene, setScene] = useState(replay ? 1 : 0);
   const [typed, setTyped] = useState(0);
   const [leaving, setLeaving] = useState(false);
   const root = useRef<HTMLDivElement>(null);
@@ -70,16 +70,17 @@ export function Intro() {
 
   const next = useCallback(() => {
     if (leaving) return;
-    if (!full || scene >= CATCH) {
+    if (scene >= CATCH) {
       finish();
       return;
     }
     setTyped(0);
     setScene(scene + 1);
-  }, [finish, full, leaving, scene]);
+  }, [finish, leaving, scene]);
 
-  /** A tap: finish the line being typed, or go to the next scene. */
+  /** A tap: finish the line being typed, or go to the next scene. The title screen waits for its button. */
   const advance = useCallback(() => {
+    if (scene === 0) return;
     if (scene >= 1 && scene < CATCH && !done) setTyped(total);
     else next();
   }, [done, next, scene, total]);
@@ -98,7 +99,7 @@ export function Intro() {
   // Scenes move on by themselves.
   useEffect(() => {
     if (!open || leaving) return;
-    const wait = scene === 0 ? TITLE_MS : scene >= CATCH ? CATCH_MS : done ? HOLD_MS : 0;
+    const wait = scene === 0 ? 0 : scene >= CATCH ? CATCH_MS : done ? HOLD_MS : 0;
     if (!wait) return;
     const id = window.setTimeout(next, wait);
     return () => window.clearTimeout(id);
@@ -113,14 +114,15 @@ export function Intro() {
       if (e.key === 'Escape') finish();
       else if (e.key === 'Enter' || e.key === ' ') {
         // The skip button handles its own Enter / Space.
-        if ((e.target as HTMLElement | null)?.closest('button')) return;
+        if (e.target instanceof Element && e.target.closest('button')) return;
         e.preventDefault();
-        advance();
+        if (scene === 0) next(); // the same as pressing はじめる
+        else advance();
       } else if (e.key !== 'Tab') e.preventDefault();
     };
     document.addEventListener('keydown', onKey, true);
     return () => document.removeEventListener('keydown', onKey, true);
-  }, [open, advance, finish]);
+  }, [open, advance, finish, next, scene]);
 
   if (!open) return null;
 
@@ -156,6 +158,16 @@ export function Intro() {
             Label <span>Drop</span>
           </h1>
           <p className="intro-sub">仕分けて、名付ける。</p>
+          <div className="intro-start">
+            <button type="button" className="intro-start-button" autoFocus onClick={next}>
+              はじめる
+            </button>
+            {seen && (
+              <button type="button" className="intro-start-skip" onClick={finish}>
+                ムービーをとばして始める
+              </button>
+            )}
+          </div>
         </div>
       )}
 
@@ -192,7 +204,7 @@ export function Intro() {
         </div>
       )}
 
-      {full && (
+      {scene > 0 && (
         <div className="intro-foot">
           {scene >= 1 && scene < CATCH && (
             <span className="intro-progress" aria-hidden="true">

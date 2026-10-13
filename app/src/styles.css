@@ -1434,3 +1434,14 @@ body.is-dragging .buddy-figure, .buddy.is-hidden .buddy-figure { pointer-events:
 @keyframes intro-kb-pan { from { object-position: var(--kb-pan-from, 50%) 50%; } to { object-position: var(--kb-pan-to, 50%) 50%; } }
 @keyframes intro-art-in { from { opacity: 0; } }
 :root:not([data-motion="full"]) :is(.intro-title, .intro-story, .intro-art, .intro-catch-line, .intro-catch-sub, .intro-caret) { animation: none; }
+
+/* Title screen: the movie starts when はじめる is pressed. */
+.intro:has(.intro-title) { cursor: default; }
+.intro-start { margin-top: clamp(28px, 7vh, 64px); display: grid; justify-items: center; gap: 14px; animation: intro-in 700ms 500ms ease-out both; }
+.intro-start-button { min-width: 220px; min-height: 56px; padding: 12px 40px; border: 2px solid #45e5ff; border-radius: 999px; background: rgba(69, 229, 255, 0.1); color: #fff; font-family: var(--mincho); font-weight: 900; font-size: clamp(18px, 4.4vw, 24px); letter-spacing: 0.4em; text-indent: 0.4em; cursor: pointer; box-shadow: 0 0 28px rgba(69, 229, 255, 0.35); transition: background 150ms, transform 150ms; animation: intro-pulse 2.4s ease-in-out 1.4s infinite; }
+.intro-start-button:hover { background: rgba(69, 229, 255, 0.24); transform: scale(1.03); }
+.intro-start-button:focus-visible { outline: 3px solid #fff; outline-offset: 4px; }
+.intro-start-skip { min-height: 44px; padding: 8px 14px; border: 0; background: none; color: rgba(255, 255, 255, 0.7); font: inherit; font-size: 13px; letter-spacing: 0.08em; text-decoration: underline; text-underline-offset: 4px; cursor: pointer; }
+.intro-start-skip:hover { color: #fff; }
+@keyframes intro-pulse { 50% { box-shadow: 0 0 44px rgba(69, 229, 255, 0.6); } }
+:root:not([data-motion="full"]) :is(.intro-start, .intro-start-button) { animation: none; }
