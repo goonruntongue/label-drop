@@ -35,7 +35,7 @@
 | `index.html` | IA ワンシートの LP（**ポータル専用に改変済み**：「ポータルへ戻る」、`../copyright.css`、前後ページ移動、PWA登録） | ❌ **上書きしない**。LP を変えたいときは、その差分だけを手で反映する |
 | `manifest.webmanifest`、`sw.js` | LP 用の PWA 設定（ポータル専用） | ❌ 上書きしない |
 | `assets/ia-app-icon.png`、`ia-pwa-192.png`、`ia-pwa-512.png` | LP 用アイコン（ポータル専用） | ❌ 上書きしない（消さない） |
-| `assets/`（そのほかの画像）、`practice.*` | LP の画像と 2D 試作 | 変更したときだけ上書き |
+| `assets/`（そのほかの画像） | LP の画像 | 変更したときだけ上書き |
 
 ## 3. 反映手順
 
@@ -77,11 +77,13 @@ git branch -vv
 ```bash
 cd C:/Users/owner/Desktop/knowledge-sorrounding-AI
 git status        # 変わったのが about-ia/app/dist/ だけであることを確認する
-git add about-ia/app/dist
+git add -A -f about-ia/app/dist   # -f が必須（about-ia/app/.gitignore が dist を除外している）
+git status        # assets/ の新しいファイルが入っていることを確認する
 git commit -m "Update Label Drop (about-ia/app/dist) to <label-drop のコミットID>"
 git push origin <確認したブランチ>
 ```
 
+- **`-f` を忘れると、新しい `assets/` のファイルがコミットされず、アプリが起動画面のまま止まる**（2026-10-13 にこれで壊れた）。
 - コミットメッセージに、元にした `label-drop` のコミットID を書いておくと、どの版を出したか追える。
 
 ### 3-5. Cloudflare Pages にも上げる（2026-10-02 から。GitHub と必ず両方）

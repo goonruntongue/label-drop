@@ -1,5 +1,5 @@
 # Build Label Drop and publish the site to GitHub Pages on every push to main.
-# Site layout: / = IA one-sheet LP (+ 2D prototype), /app/ = Label Drop.
+# Site layout: / = IA one-sheet LP, /app/ = Label Drop.
 name: Deploy to GitHub Pages
 
 on:
@@ -42,7 +42,7 @@ jobs:
       - name: Assemble site
         run: |
           mkdir -p _site
-          cp index.html practice.html practice.css practice.js _site/
+          cp index.html _site/
           cp -r assets _site/assets
           cp -r app/dist _site/app
           touch _site/.nojekyll
