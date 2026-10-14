@@ -11,6 +11,7 @@ import { AiEnergyMeter, AiEnergySection } from './AiEnergy';
 import { AI_ENABLED } from '../api';
 import { useDialog } from './useDialog';
 import { APP_NAME, PORTAL } from '../edition';
+import { PATTERNS, patternLabel } from '../game/patterns';
 
 const ICONS = {
   undo: 'M9 14 4 9l5-5M4 9h10.5a5.5 5.5 0 0 1 0 11H11',
@@ -91,6 +92,30 @@ function BlockCountField() {
         ＋
       </button>
     </div>
+  );
+}
+
+/** IA仕分け練習: the board is picked from patterns (blocks, boxes, even or uneven). A new pattern deals a new board. */
+function PatternField() {
+  const pattern = useGame((s) => s.pattern);
+  const choose = (id: string) => {
+    const game = useGame.getState();
+    if (id === game.pattern) return;
+    const inProgress = game.items.some((item) => game.assign[item.id]);
+    if (inProgress && !window.confirm('パターンを変えると、今の仕分けはリセットされます。よろしいですか？')) return;
+    game.setPattern(id);
+  };
+  return (
+    <label className="hud-field hud-pattern">
+      <span className="kicker">BLOCKS</span>
+      <select aria-label="ブロック数と箱の数" value={pattern} onChange={(e) => choose(e.target.value)}>
+        {PATTERNS.map((p) => (
+          <option key={p.id} value={p.id}>
+            {patternLabel(p)}
+          </option>
+        ))}
+      </select>
+    </label>
   );
 }
 
@@ -326,7 +351,7 @@ export function Header() {
           ))}
         </select>
       </label>
-      {mode === 'free' && <BlockCountField />}
+      {PORTAL ? <PatternField /> : mode === 'free' && <BlockCountField />}
       <div className="hud-progress" role="status" aria-label={`分類済み ${done} / ${total}`}>
         <span className="kicker">SORTED</span>
         <span className="num">

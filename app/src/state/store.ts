@@ -5,6 +5,7 @@ import { grade, type Grade } from '../game/grading';
 import { balancedSizes, levelDef, MAX_LEVEL, sizesForLevel, STARS_TO_LEVEL_UP } from '../game/levels';
 import { THEMES, type ThemeId } from '../theme/themes';
 import { PORTAL } from '../edition';
+import { DEFAULT_PATTERN, patternById, patternSizes } from '../game/patterns';
 
 export const TRAY_GLYPHS = ['◆', '●', '▲', '■', '★'] as const;
 export const MIN_TRAYS = 3;
@@ -92,6 +93,7 @@ const TUNING_KEY = 'practice-ia:p0:tuning';
 const THEME_KEY = 'practice-ia:theme';
 const PREFS_KEY = 'practice-ia:prefs';
 const BLOCK_COUNT_KEY = 'practice-ia:block-count';
+const PATTERN_KEY = 'practice-ia:pattern';
 const PROGRESS_KEY = 'practice-ia:progress';
 const SAVE_SLOTS_KEY = 'practice-ia:save-slots:v1';
 export const SAVE_SLOT_COUNT = 3;
@@ -236,7 +238,12 @@ function freshBoard(problemIndex: number, sizes: number[], showCapacity: boolean
   };
 }
 
+/** IA仕分け練習: the chosen board pattern (blocks, boxes, even or uneven). Kept here as well as in the state so every new board uses it. */
+let portalPattern = load<string>(PATTERN_KEY, DEFAULT_PATTERN, (raw) => patternById(raw).id);
+
 function boardFor(mode: Mode, level: number, problemIndex: number, blockCount: number) {
+  // The portal edition: boxes show how many blocks they take ("0/3").
+  if (PORTAL) return freshBoard(problemIndex, patternSizes(patternById(portalPattern)), true);
   if (mode === 'level') {
     const def = levelDef(level);
     return freshBoard(problemIndex, sizesForLevel(level), def.showCapacity);
@@ -280,6 +287,8 @@ export interface GameState {
   theme: ThemeId;
   prefs: Prefs;
   blockCount: number;
+  /** IA仕分け練習: the board pattern's id (see game/patterns.ts). */
+  pattern: string;
   hintOpen: boolean;
   axisHintShown: boolean;
   assistUsed: { some: number; all: boolean };
@@ -351,6 +360,7 @@ export interface GameState {
   setTheme(theme: ThemeId): void;
   setPrefs(patch: Partial<Prefs>): void;
   setBlockCount(count: number): void;
+  setPattern(id: string): void;
   loadProblem(index: number): void;
   moveItem(itemId: string, to: string | null, record?: boolean): void;
   undo(): Move | null;
@@ -393,6 +403,7 @@ export const useGame = create<GameState>()((set, get) => {
     theme: loadTheme(),
     prefs: loadPrefs(),
     blockCount: initialBlockCount,
+    pattern: portalPattern,
     hintOpen: false,
     peek: null,
     saveSlots: initialSaveSlots,
@@ -539,6 +550,13 @@ export const useGame = create<GameState>()((set, get) => {
       save(BLOCK_COUNT_KEY, String(blockCount));
       const { mode, level, problemIndex } = get();
       set({ blockCount, ...(mode === 'free' ? boardFor(mode, level, problemIndex, blockCount) : {}) });
+    },
+
+    setPattern: (id) => {
+      portalPattern = patternById(id).id;
+      save(PATTERN_KEY, portalPattern);
+      const { mode, level, problemIndex, blockCount } = get();
+      set({ pattern: portalPattern, ...boardFor(mode, level, problemIndex, blockCount) });
     },
 
     setTheme: (theme) => {
