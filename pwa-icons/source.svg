@@ -1,37 +1,17 @@
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1024 1024">
-  <!-- IA one-sheet icon: scattered information becomes a clear hierarchy. -->
+  <!-- IA one-sheet icon: a warm index system turns loose notes into a usable route. -->
   <defs>
-    <linearGradient id="bg" x1="0" y1="0" x2="1" y2="1">
-      <stop stop-color="#102a57"/>
-      <stop offset="1" stop-color="#050c1c"/>
-    </linearGradient>
-    <linearGradient id="card" x1="0" y1="0" x2="0" y2="1">
-      <stop stop-color="#eff9ff"/>
-      <stop offset="1" stop-color="#b8dcf4"/>
-    </linearGradient>
-    <linearGradient id="core" x1="0" y1="0" x2="1" y2="1">
-      <stop stop-color="#66efff"/>
-      <stop offset="1" stop-color="#3d91f3"/>
-    </linearGradient>
-    <filter id="shadow" x="-30%" y="-30%" width="160%" height="180%">
-      <feDropShadow dx="0" dy="22" stdDeviation="19" flood-color="#010716" flood-opacity=".7"/>
-    </filter>
-    <filter id="glow" x="-70%" y="-70%" width="240%" height="240%">
-      <feGaussianBlur stdDeviation="12" result="blur"/>
-      <feMerge><feMergeNode in="blur"/><feMergeNode in="SourceGraphic"/></feMerge>
-    </filter>
+    <linearGradient id="bg" x1="0" y1="0" x2="1" y2="1"><stop stop-color="#f7efd9"/><stop offset="1" stop-color="#e7d8b9"/></linearGradient>
+    <linearGradient id="paper" x1="0" y1="0" x2="0" y2="1"><stop stop-color="#fffdf5"/><stop offset="1" stop-color="#f5e9cf"/></linearGradient>
+    <filter id="shadow" x="-25%" y="-25%" width="150%" height="170%"><feDropShadow dx="0" dy="19" stdDeviation="14" flood-color="#4a291c" flood-opacity=".24"/></filter>
   </defs>
-  <rect width="1024" height="1024" fill="url(#bg)"/>
-  <g opacity=".12" stroke="#8defff" stroke-width="3"><path d="M82 126H942M82 260H942M82 764H942M82 898H942"/><path d="M168 72V952M512 72V952M856 72V952"/></g>
-  <!-- Input cards: unstructured pieces of information -->
-  <g filter="url(#shadow)">
-    <g transform="rotate(-9 253 285)"><rect x="121" y="195" width="264" height="172" rx="30" fill="url(#card)"/><rect x="158" y="240" width="128" height="17" rx="8.5" fill="#237bc3"/><rect x="158" y="282" width="177" height="14" rx="7" fill="#6a9fc8" opacity=".72"/><rect x="158" y="315" width="102" height="14" rx="7" fill="#6a9fc8" opacity=".5"/></g>
-    <g transform="rotate(9 771 285)"><rect x="639" y="195" width="264" height="172" rx="30" fill="url(#card)"/><rect x="676" y="240" width="128" height="17" rx="8.5" fill="#f0715d"/><rect x="676" y="282" width="177" height="14" rx="7" fill="#6a9fc8" opacity=".72"/><rect x="676" y="315" width="102" height="14" rx="7" fill="#6a9fc8" opacity=".5"/></g>
-  </g>
-  <!-- The IA map: inputs meet, then branch into a legible structure. -->
-  <g fill="none" stroke="#67eaff" stroke-width="18" stroke-linecap="round" stroke-linejoin="round" opacity=".9" filter="url(#glow)"><path d="M284 398L430 502M740 398L594 502M512 614V680M240 810V772H784V810"/></g>
-  <g filter="url(#shadow)"><rect x="375" y="485" width="274" height="164" rx="42" fill="url(#core)" stroke="#d8fbff" stroke-width="10"/><path d="M439 545H585M439 588H548" stroke="#092759" stroke-width="18" stroke-linecap="round" opacity=".85"/></g>
-  <g filter="url(#shadow)"><rect x="124" y="790" width="232" height="126" rx="32" fill="#137a98" stroke="#8df6ff" stroke-width="8"/><rect x="396" y="790" width="232" height="126" rx="32" fill="#2767b6" stroke="#b9ddff" stroke-width="8"/><rect x="668" y="790" width="232" height="126" rx="32" fill="#744a9a" stroke="#e0bcff" stroke-width="8"/></g>
-  <g fill="#e9fbff" opacity=".9"><rect x="176" y="839" width="128" height="14" rx="7"/><rect x="448" y="839" width="128" height="14" rx="7"/><rect x="720" y="839" width="128" height="14" rx="7"/></g>
-  <circle cx="512" cy="502" r="18" fill="#fff3a4" filter="url(#glow)"/>
+  <rect width="1024" height="1024" rx="112" fill="url(#bg)"/>
+  <g stroke="#cdbf9f" stroke-width="3" opacity=".42"><path d="M96 170H928M96 330H928M96 490H928M96 650H928M96 810H928"/><path d="M176 96V928M352 96V928M528 96V928M704 96V928M880 96V928"/></g>
+  <g filter="url(#shadow)"><rect x="176" y="240" width="672" height="554" rx="46" fill="#d7c5a3" transform="rotate(-4 512 517)"/><rect x="176" y="205" width="672" height="554" rx="46" fill="url(#paper)" stroke="#4b6e51" stroke-width="12"/></g>
+  <path d="M264 205V146Q264 116 294 116H428V205" fill="#d86b43"/><path d="M458 205V146Q458 116 488 116H622V205" fill="#e7ae42"/><path d="M652 205V146Q652 116 682 116H770Q800 116 800 146V205" fill="#4b6e51"/>
+  <rect x="254" y="292" width="254" height="46" rx="23" fill="#c94f35"/><rect x="254" y="370" width="412" height="18" rx="9" fill="#aa9b7c" opacity=".8"/><rect x="254" y="406" width="288" height="18" rx="9" fill="#c6b897"/>
+  <g fill="none" stroke="#4b6e51" stroke-width="18" stroke-linecap="round" stroke-linejoin="round"><path d="M512 500V548M330 548H694M330 548V588M512 548V588M694 548V588"/></g>
+  <g filter="url(#shadow)"><rect x="226" y="586" width="208" height="108" rx="25" fill="#e7ae42"/><rect x="408" y="586" width="208" height="108" rx="25" fill="#d86b43"/><rect x="590" y="586" width="208" height="108" rx="25" fill="#4b6e51"/></g>
+  <g fill="#fff8e7" opacity=".95"><rect x="265" y="630" width="130" height="16" rx="8"/><rect x="447" y="630" width="130" height="16" rx="8"/><rect x="629" y="630" width="130" height="16" rx="8"/></g>
+  <circle cx="752" cy="318" r="48" fill="#4b6e51"/><path d="M768 284l-11 39-39 11 39 11 11 39 11-39 39-11-39-11z" fill="#fff5d7"/>
 </svg>
