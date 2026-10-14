@@ -43,6 +43,8 @@ jobs:
         run: |
           mkdir -p _site
           cp index.html _site/
+          cp manifest.webmanifest sw.js _site/
+          cp -r pwa-icons _site/pwa-icons
           cp -r assets _site/assets
           cp -r app/dist _site/app
           touch _site/.nojekyll
